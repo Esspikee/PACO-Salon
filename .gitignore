@@ -1,0 +1,6 @@
+# Live salon records are created and updated by the server.
+data/
+
+# Local server output and temporary files.
+*.log
+.tmp-*/
