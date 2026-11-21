@@ -12,8 +12,12 @@
   };
   const MIGRATED = 'salon-ticket-server-migrated-v2';
   let state = {tickets: [], nextTicketNumber: 0, settings: {}};
+  let confirmedState = state;
   let pending = 0;
+  let requestSequence = 0;
+  let lastAppliedSequence = 0;
   let queue = Promise.resolve();
+  let saveGeneration = 0;
   const changed = () => document.dispatchEvent(new Event('salon-tickets-updated'));
   const request = async (method, body) => {
     const response = await fetch('/ticket-state', {method, cache: 'no-store', headers: method === 'POST' ? {'content-type': 'application/json'} : undefined, body: method === 'POST' ? JSON.stringify(body) : undefined});
@@ -23,9 +27,13 @@
   };
   const refresh = async () => {
     if (pending) return;
+    const sequence = ++requestSequence;
     try {
       const fresh = await request('GET');
-      if (!pending && JSON.stringify(fresh) !== JSON.stringify(state)) {state = fresh; changed();}
+      if (pending || sequence <= lastAppliedSequence) return;
+      lastAppliedSequence = sequence;
+      confirmedState = fresh;
+      if (JSON.stringify(fresh) !== JSON.stringify(state)) {state = fresh; changed();}
     } catch { /* Se reintentará cuando vuelva la conexión. */ }
   };
   const legacy = () => {
@@ -41,12 +49,13 @@
     } catch { /* No hay tickets locales para importar. */ }
     return {action: 'migrate', upsert, deleteIds: [], settings};
   };
-  const ready = (async () => {
+  const initialize = async () => {
     state = await request('GET');
     if (window.localStorage.getItem(MIGRATED) !== '1') {
       state = await request('POST', legacy());
       window.localStorage.setItem(MIGRATED, '1');
     }
+    confirmedState = state;
     changed();
     setInterval(refresh, 2000);
     document.addEventListener?.('visibilitychange', () => {if (!document.hidden) void refresh()});
@@ -63,17 +72,50 @@
         } catch { /* Se ignoran avisos inválidos. */ }
       });
     }
-  })();
-  const save = (body, rollbackState) => {
+  };
+  let initialization;
+  const ensureReady = () => {
+    if (!initialization) initialization = initialize().catch(error => {
+      initialization = undefined;
+      throw error;
+    });
+    return initialization;
+  };
+  const start = () => {void ensureReady().catch(() => {});};
+  window.addEventListener?.('online', start);
+  start();
+  const save = (body, removedTickets = []) => {
+    const generation = saveGeneration;
+    const keys = new Set(Object.keys(body.settings).map(key => 'setting:' + key));
+    for (const ticket of [...body.upsert, ...removedTickets]) {
+      keys.add('group:' + ticket.ticketGroupId);
+    }
+    body.expected = {};
+    const revisions = {...state.revisions};
+    for (const key of keys) {
+      body.expected[key] = revisions[key] || 0;
+      revisions[key] = body.expected[key] + 1;
+    }
+    state = {...state, revisions};
+    body.operationId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + '-' + (++requestSequence);
+    lastAppliedSequence = ++requestSequence;
     pending++;
     queue = queue.catch(() => {}).then(async () => {
       try {
+        if (generation !== saveGeneration) {
+          if (pending === 1) {state = confirmedState; changed();}
+          return false;
+        }
         const fresh = await request('POST', body);
+        confirmedState = fresh;
         if (pending === 1) {state = fresh; changed();}
         return true;
       } catch (error) {
-        try {state = await request('GET'); changed();}
-        catch {if (rollbackState) {state = rollbackState; changed();}}
+        try {confirmedState = await request('GET');}
+        catch { /* Conserva la última respuesta confirmada del servidor. */ }
+        if (pending === 1) {state = confirmedState; changed();}
+        if (confirmedState.recentOperations?.includes(body.operationId)) return true;
+        saveGeneration++;
         alert(`${error.message} Comprueba el servidor y vuelve a intentar el cambio.`);
         return false;
       } finally {pending--;}
@@ -81,7 +123,22 @@
     return queue;
   };
   window.salonTicketStorage = {
-    ready,
+    get ready() {return ensureReady();},
+    confirmedTicketGroup(id) {
+      return {
+        revision: confirmedState.revisions?.['group:' + id] || 0,
+        lines: confirmedState.tickets.filter(line => line.ticketGroupId === id)
+      };
+    },
+    saveSettings(values) {
+      const settings = {};
+      for (const [key, value] of Object.entries(values)) {
+        if (!SETTINGS.includes(key)) throw new Error('Ajuste desconocido.');
+        settings[key] = JSON.stringify(value);
+      }
+      state = {...state, settings: {...state.settings, ...settings}};
+      return save({action: 'changes', upsert: [], deleteIds: [], settings});
+    },
     getItem(key) {
       if (key === TICKETS) return JSON.stringify(state.tickets);
       if (key === NEXT) return String(state.nextTicketNumber);
@@ -98,9 +155,8 @@
         const upsert = tickets.filter(ticket => JSON.stringify(before.get(ticket.id)) !== JSON.stringify(ticket));
         const deleteIds = [...before.keys()].filter(id => !after.has(id));
         if (!upsert.length && !deleteIds.length) return Promise.resolve(true);
-        const previous = state;
         state = {...state, tickets};
-        return save({action: 'changes', upsert, deleteIds, settings: {}, ...(activity ? {activity} : {})}, previous);
+        return save({action: 'changes', upsert, deleteIds, settings: {}, ...(activity ? {activity} : {})}, deleteIds.map(id => before.get(id)));
       } else if (key === SUPPLY_REQUIREMENTS) {
         const requirements = JSON.parse(String(value));
         if (!requirements || typeof requirements !== 'object' || Array.isArray(requirements)) throw new Error('Configuración de insumos inválida.');
@@ -108,15 +164,13 @@
         try {specialties = JSON.parse(state.settings[SERVICE_SPECIALTIES] || '{}')} catch {specialties = {}}
         if (!specialties || typeof specialties !== 'object' || Array.isArray(specialties)) specialties = {};
         const serialized = JSON.stringify({...specialties, __requiresSupplies: requirements});
-        const previous = state;
         state = {...state, settings: {...state.settings, [SERVICE_SPECIALTIES]: serialized}};
-        return save({action: 'changes', upsert: [], deleteIds: [], settings: {[SERVICE_SPECIALTIES]: serialized}}, previous);
+        return save({action: 'changes', upsert: [], deleteIds: [], settings: {[SERVICE_SPECIALTIES]: serialized}});
       } else if (SETTINGS.includes(key)) {
         const serialized = String(value);
         JSON.parse(serialized);
-        const previous = state;
         state = {...state, settings: {...state.settings, [key]: serialized}};
-        return save({action: 'changes', upsert: [], deleteIds: [], settings: {[key]: serialized}}, previous);
+        return save({action: 'changes', upsert: [], deleteIds: [], settings: {[key]: serialized}});
       }
     }
   };

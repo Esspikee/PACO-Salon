@@ -17,7 +17,7 @@ if not defined NODE_EXE (
   exit /b 1
 )
 echo Usando Node.js: "%NODE_EXE%"
-start "" powershell.exe -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Start-Process 'http://localhost:8080/main'"
+set "SALON_OPEN_BROWSER=1"
 "%NODE_EXE%" server.mjs
 echo.
 echo El servidor se detuvo.

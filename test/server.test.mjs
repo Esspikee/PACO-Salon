@@ -4,11 +4,22 @@ import path from 'node:path'
 import os from 'node:os'
 import {mkdtemp, readFile, rm} from 'node:fs/promises'
 import {fileURLToPath} from 'node:url'
-import {runInNewContext} from 'node:vm'
+import {Script, runInNewContext} from 'node:vm'
 import {createSalonServer} from '../server.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(here, '..')
+
+test('all five standalone views contain valid inline JavaScript', async () => {
+  for (const name of ['main', 'auxiliar', 'estilistas', 'manicuristas', 'juan-pablo']) {
+    const html = await readFile(path.join(root, 'htmls', name + '.html'), 'utf8')
+    assert.equal(html.indexOf('</html>'), html.trimEnd().length - '</html>'.length, name)
+    assert.equal(html.split('async function openTickets(').length, 2, name)
+    for (const [, source] of html.matchAll(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/g)) {
+      new Script(source, {filename: name + '.html'})
+    }
+  }
+})
 
 async function launch(dataDirectory) {
   const result = await createSalonServer({dataDirectory, seedPath: path.join(root, 'initial-team.json'), publicDirectory: path.join(root, 'htmls')})
@@ -204,7 +215,7 @@ test('Tickets tab asks for a customer name only for a blank new ticket', async (
     const prompts = []
     const opens = []
     const context = {
-      ticketWorkspace: 'history', openTicketId: '', ticketClientName: '',
+      navigationVersion: 0, ticketWorkspace: 'history', openTicketId: '', ticketClientName: '',
       document: {querySelector: () => pageRoot},
       renderTickets: () => {}, requestTicketCustomer: target => prompts.push(target),
       openTickets: (...args) => opens.push(args)
@@ -228,9 +239,9 @@ test('Tickets tab asks for a customer name only for a blank new ticket', async (
 })
 
 test('finalized history groups tickets by their closing date', async () => {
-  const today = new Date(); today.setHours(12, 0, 0, 0)
-  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1)
-  const dateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  const today = new Date('2026-11-20T05:00:00Z')
+  const yesterday = new Date(today.getTime() - 1)
+  const dateKey = date => date === today ? '2026-11-20' : '2026-11-19'
   for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
     const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
     const start = html.indexOf('      const finalizedGroups = historyGroups.filter(isFinalized);')
@@ -243,11 +254,13 @@ test('finalized history groups tickets by their closing date', async () => {
         {id: 'still-open', lines: [{ticketStatus: 'open', localDate: dateKey(today)}]}
       ],
       isFinalized: group => group.lines.every(line => line.ticketStatus !== 'open'),
-      localDate: () => dateKey(today),
+      root: {dataset: {}},
+      Date: class extends Date {constructor(...args) {super(...(args.length ? args : [today.getTime()]))}},
       historyList: groups => groups.map(group => group.id).join(','),
       showFinalizedTickets: true, TICKET_WORKER_SPECIALTY: true
     }
-    runInNewContext(html.slice(start, end) + '\nglobalThis.todayGroups = finalizedTodayGroups; globalThis.olderGroups = finalizedOlderGroups; globalThis.markup = historyMarkup;', context)
+    const calendar = html.slice(html.indexOf('    const salonCalendar ='), html.indexOf('    const ticketId ='))
+    runInNewContext(calendar + html.slice(start, end) + '\nglobalThis.todayGroups = finalizedTodayGroups; globalThis.olderGroups = finalizedOlderGroups; globalThis.markup = historyMarkup;', context)
     assert.deepEqual(Array.from(context.todayGroups, group => group.id), ['closed-today'], view)
     assert.deepEqual(Array.from(context.olderGroups, group => group.id), ['closed-yesterday'], view)
     assert.match(context.markup, /Hoy/)
@@ -302,6 +315,31 @@ test('broadcasts each saved ticket activity to connected tablets', async t => {
   await reader.cancel()
 })
 
+test('a delayed roster refresh cannot reverse a role change on any ticket view', async () => {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
+    const html = await readFile(path.join(root, 'htmls', view + '.html'), 'utf8')
+    const requests = []
+    const personalId = 'e69d26e7-d3d7-440e-9117-c71e264a1d70'
+    const worker = {id: personalId, name: 'Empleado', specialty: 'ESTILISTA', active: true}
+    const context = {
+      PERSONAL_WORKER_ID: personalId, activeWorker: {code: personalId.toUpperCase()},
+      TICKET_WORKER_SPECIALTY: ({estilistas: 'ESTILISTA', manicuristas: 'MANICURISTA'})[view] || null,
+      refreshTicketView() {}, getServiceSpecialties: () => ({}), fetch: () => new Promise(resolve => requests.push(resolve))
+    }
+    const roster = html.slice(html.indexOf('    const workerCode ='), html.indexOf('    const saveWorkerOrder ='))
+    const refresh = html.slice(html.indexOf('    let rosterRequest ='), html.indexOf('    const getTickets =', html.indexOf('    let rosterRequest =')))
+    runInNewContext(roster + refresh + '\nglobalThis.refresh = refreshWorkersFromServer; globalThis.visible = getWorkers;', context)
+    const old = context.refresh(), current = context.refresh()
+    const reply = specialty => ({ok: true, json: async () => ({workers: [{...worker, specialty, active: false}]})})
+    requests[1](reply('MANICURISTA'))
+    await current
+    requests[0](reply('ESTILISTA'))
+    await old
+    assert.deepEqual(Array.from(context.visible(), person => person.specialty), view === 'estilistas' ? [] : ['MANICURISTA'], view)
+    assert.equal(context.activeWorker?.specialty, view === 'estilistas' ? undefined : 'MANICURISTA', view)
+  }
+})
+
 test('Juan Pablo view filters workers and ticket groups by his ID', async () => {
   const html = await readFile(path.join(root, 'htmls', 'juan-pablo.html'), 'utf8')
   const workerStart = html.indexOf('    const getWorkers =')
@@ -347,6 +385,8 @@ test('shares actions, rejects stale writes, persists state, and restores with un
   assert.equal(stale.status, 409)
   const undone = await (await fetch(running.url + '/actions', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({action: 'undo', version: moved.version, operation_id: 'undo'})})).json()
   assert.deepEqual(undone.workers, initial.workers)
+  const delayedRetry = await fetch(running.url + '/actions', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(action)})
+  assert.deepEqual(await delayedRetry.json(), undone)
   const deleted = await (await fetch(running.url + '/actions', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({action: 'delete', version: undone.version, worker_id: person.id, operation_id: 'delete'})})).json()
   assert.equal(deleted.workers.some(worker => worker.id === person.id), false)
   await close(running.server)
@@ -493,6 +533,14 @@ test('concurrent ticket changes keep status and assignment consistent across the
   const afterStaleFinalize = await post([{...first, ticketStatus: 'finalized', closedAt: '2026-11-17T11:00:00.000Z'}])
   assert.deepEqual(afterStaleFinalize.map(line => line.ticketStatus), ['finalized', 'finalized'])
   assert.ok(afterStaleFinalize.every(line => line.closedAt === '2026-11-17T11:00:00.000Z'))
+  const replacement = {...afterStaleFinalize[0], id: 'replacement-line'}
+  const request = body => fetch(url + '/ticket-state', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)})
+  const changes = {action: 'changes', upsert: [replacement], deleteIds: afterStaleFinalize.map(line => line.id), settings: {}}
+  const replaced = await request(changes)
+  assert.equal(replaced.status, 200)
+  assert.equal((await replaced.json()).tickets[0].ticketNumber, replacement.ticketNumber)
+  const invalid = await request({...changes, upsert: [null], activity: {status: 'open', groupId: 'missing', workerName: 'Ana'}})
+  assert.equal(invalid.status, 400)
 })
 
 test('tablet ticket storage imports local history and refreshes another tablet', async t => {
@@ -540,6 +588,100 @@ test('tablet ticket storage imports local history and refreshes another tablet',
   assert.equal(await first.storage.setItem('salon-service-specialties-v1', JSON.stringify({...sharedSettings, __boardIdleSeconds: 120})), true)
   await second.refresh()
   assert.equal(JSON.parse(second.storage.getItem('salon-service-specialties-v1')).__boardIdleSeconds, 120)
+})
+
+test('independent tablets can save separate tickets, detect conflicts and recover a lost acknowledgement', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'salon-phase2-'))
+  t.after(() => rm(directory, {recursive: true, force: true}))
+  const {server, url} = await launch(directory)
+  t.after(() => close(server))
+  const script = await readFile(path.join(root, 'ticket-storage.js'), 'utf8')
+  const key = 'salon-paper-tickets-v1'
+  async function tablet() {
+    const window = {localStorage: {getItem: () => '1'}}
+    let refresh, loseReply = false
+    async function transport(route, options) {
+      const response = await fetch(url + route, options)
+      if (loseReply && options.method === 'POST') {
+        loseReply = false
+        assert.equal(response.status, 200)
+        throw Error('response lost')
+      }
+      return response
+    }
+    runInNewContext(script, {window, document: {dispatchEvent() {}}, Event: class {}, alert() {}, setInterval: fn => {refresh = fn}, fetch: transport})
+    const storage = window.salonTicketStorage
+    await storage.ready
+    const read = () => JSON.parse(storage.getItem(key))
+    return {read, save: lines => storage.setItem(key, JSON.stringify(lines)), refresh, loseReply: () => {loseReply = true}}
+  }
+  const [a, b] = await Promise.all([tablet(), tablet()])
+  const line = id => ({id, ticketGroupId: id, ticketStatus: 'open', serviceName: 'Corte', workerName: 'Ana', amount: 10000})
+  assert.deepEqual(await Promise.all([a.save([line('a')]), b.save([line('b')])]), [true, true])
+  await Promise.all([a.refresh(), b.refresh()])
+  a.loseReply()
+  assert.equal(await a.save(a.read().map(item => item.id === 'a' ? {...item, amount: 25000} : item)), true)
+  const staleDeletion = b.save(b.read().filter(item => item.id !== 'a'))
+  const queuedReplacement = b.save([...b.read(), line('a')])
+  assert.deepEqual(await Promise.all([staleDeletion, queuedReplacement]), [false, false])
+  await a.refresh()
+  assert.deepEqual(b.read(), a.read())
+  assert.equal(b.read().find(item => item.id === 'a').amount, 25000)
+  assert.equal(b.read().length, 2)
+})
+
+test('late tablet polls cannot undo newer polls or completed saves', async () => {
+  const script = await readFile(path.join(root, 'ticket-storage.js'), 'utf8')
+  const key = 'salon-paper-tickets-v1'
+  const response = tickets => ({ok: true, json: async () => ({tickets, settings: {}, nextTicketNumber: 1})})
+  const window = {localStorage: {getItem: () => '1'}}
+  const reads = []
+  let refresh
+  let starting = true
+  const fetchMock = async (_, options) => {
+    if (starting) return response([])
+    if (options.method === 'POST') return response(JSON.parse(options.body).upsert)
+    return new Promise(resolve => reads.push(resolve))
+  }
+  runInNewContext(script, {window, document: {dispatchEvent() {}}, Event: class {}, setInterval: callback => {refresh = callback}, fetch: fetchMock})
+  const storage = window.salonTicketStorage
+  await storage.ready
+  starting = false
+  const slow = refresh()
+  const fast = refresh()
+  reads[1](response([{id: 'current'}]))
+  await fast
+  reads[0](response([]))
+  await slow
+  assert.deepEqual(JSON.parse(storage.getItem(key)), [{id: 'current'}])
+  const beforeSave = refresh()
+  await storage.setItem(key, JSON.stringify([{id: 'saved'}]))
+  reads[2](response([]))
+  await beforeSave
+  assert.deepEqual(JSON.parse(storage.getItem(key)), [{id: 'saved'}])
+})
+
+test('a tablet can retry startup and two offline saves cannot leave a phantom ticket', async () => {
+  const script = await readFile(path.join(root, 'ticket-storage.js'), 'utf8')
+  const key = 'salon-paper-tickets-v1'
+  const window = {localStorage: {getItem: () => '1'}}
+  let online = false
+  let timers = 0
+  const fetch = async () => {
+    if (!online) throw Error('offline')
+    return {ok: true, json: async () => ({tickets: [{id: 'existing'}], settings: {}, nextTicketNumber: 1})}
+  }
+  runInNewContext(script, {window, fetch, Event: class {}, document: {dispatchEvent() {}}, setInterval: () => {timers++}, alert() {}})
+  const storage = window.salonTicketStorage
+  await assert.rejects(storage.ready, /offline/)
+  online = true
+  await Promise.all([storage.ready, storage.ready])
+  assert.equal(timers, 1)
+  online = false
+  const first = storage.setItem(key, JSON.stringify([{id: 'first'}]))
+  const second = storage.setItem(key, JSON.stringify([{id: 'second'}]))
+  assert.deepEqual(await Promise.all([first, second]), [false, false])
+  assert.deepEqual(JSON.parse(storage.getItem(key)), [{id: 'existing'}])
 })
 
 test('tablet storage reports failed saves, rolls back, and accepts a retry', async () => {
@@ -633,7 +775,7 @@ test('Main and Auxiliary history shortcut opens History while the menu Tickets b
   let renders = 0
   const existingRoot = {dataset: {}}
   const context = {
-    openTicketId: '', ticketClientName: 'Existing client', requestTicketCustomer: () => {},
+    navigationVersion: 0, openTicketId: '', ticketClientName: 'Existing client', requestTicketCustomer: () => {},
     launcher: {addEventListener: (_event, handler) => {click = handler}},
     historyLauncher: {addEventListener: (_event, handler) => {historyClick = handler}},
     document: {createElement: () => ({setAttribute() {}, addEventListener: (_event, handler) => {floatingClick = handler}}), querySelector: selector => {
@@ -764,6 +906,13 @@ test('leaving a ticket open clears the customer and lines but keeps the selected
     assert.ok(stored.every(line => line.openAssignedWorkerCode === 'E1' && line.openAssignedWorkerName === 'Ana'), view)
     confirmSave(true)
     await reassigning
+    const accepted = stored
+    let warning = ''
+    context.alert = message => {warning = message}
+    context.getTickets = () => accepted.map(line => ({...line, ticketStatus: 'finalized'}))
+    await context.saveTicket(true, worker)
+    assert.match(warning, /cambió en otra pantalla/, view)
+    assert.equal(stored, accepted, view)
   }
 })
 
@@ -1181,6 +1330,32 @@ test('ticket controls scroll away with the ticket content', async () => {
   frame()
   assert.equal(control.style.transform, 'translateY(-64px)')
   assert.equal(classes.has('ticket-controls-hidden'), true)
+})
+
+test('rapid ticket and history taps create only the most recently requested screen', async () => {
+  for (const name of ['main', 'auxiliar', 'estilistas', 'manicuristas', 'juan-pablo']) {
+    const html = await readFile(path.join(root, 'htmls', name + '.html'), 'utf8')
+    const start = html.indexOf('    async function openTickets(')
+    const end = html.indexOf('\n    }', start) + 6
+    const reads = [], mounted = []
+    const context = {
+      navigationVersion: 0, ticketWorkspace: '', localStorage: {ready: Promise.resolve()},
+      document: {querySelector: () => null, body: {append: el => mounted.push(el)}},
+      ticketPage: () => ({view: context.ticketWorkspace}), launcher: {}, renderTickets() {},
+      syncPageScrollLock() {}, syncTicketAppearance() {}, setInterval() {},
+      refreshWorkersFromServer: () => new Promise(resolve => reads.push(resolve))
+    }
+    runInNewContext(html.slice(start, end), context)
+    const first = context.openTickets('tickets')
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(reads.length, 1)
+    const last = context.openTickets('history')
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal(reads.length, 2)
+    reads[1](); await last
+    reads[0](); await first
+    assert.deepEqual(mounted.map(el => el.view), ['history'], name)
+  }
 })
 
 test('inactive non-board views return to Tablero after the selected time, defaulting to 30 seconds', async () => {

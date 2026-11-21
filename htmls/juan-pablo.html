@@ -188,10 +188,19 @@ Error generating stack: `+g.message+`
     };
     document.addEventListener("input", (event) => { if (event.target.matches?.("[data-money-input]")) formatPriceInput(event.target); });
     const esc = (value) => String(value ?? "").replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
-    const localDate = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`; };
+    const salonCalendar = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Bogota", year: "numeric", month: "2-digit", day: "2-digit" });
+    const localDate = (date = new Date()) => salonCalendar.format(date);
+    const receiptDate = group => {
+      const closed = group.lines.map(line => Date.parse(line.closedAt)).filter(Number.isFinite);
+      if (closed.length) return localDate(new Date(closed.reduce((latest, time) => Math.max(latest, time))));
+      const first = group.lines[0];
+      if (first?.localDate) return first.localDate;
+      const created = Date.parse(group.createdAt || first?.createdAt);
+      return Number.isFinite(created) ? localDate(new Date(created)) : "";
+    };
     const ticketId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const workerCode = (worker) => {
-      if (worker.code) return String(worker.code).trim().toUpperCase();
+      if (worker.code || worker.id) return String(worker.code || worker.id).trim().toUpperCase();
       const prefix = worker.specialty === "MANICURISTA" ? "M" : worker.specialty === "AUXILIAR" ? "A" : "E";
       const number = String(worker.name || "").match(/(\d+)\s*$/)?.[1] || "1";
       return `${prefix}${number}`;
@@ -231,16 +240,21 @@ Error generating stack: `+g.message+`
       root.pendingTicketRefresh = false;
       renderTickets(root);
     }
+    let rosterRequest = 0;
+    let appliedRosterRequest = 0;
     const refreshWorkersFromServer = async (root) => {
+      const request = ++rosterRequest;
       try {
         const response = await fetch("/board", { cache: "no-store" });
         const board = await response.json();
         if (!response.ok || !Array.isArray(board?.workers)) throw new Error("Equipo no disponible");
+        if (request < appliedRosterRequest) return;
+        appliedRosterRequest = request;
         const workers = board.workers.filter((worker) => typeof worker?.id === "string" && typeof worker?.name === "string" && ["MANICURISTA", "ESTILISTA", "AUXILIAR"].includes(worker.specialty)).map((worker) => ({ ...worker, code: worker.id }));
         const changed = JSON.stringify((serverWorkers || []).map(({ id, name, specialty, active }) => [id, name, specialty, active])) !== JSON.stringify(workers.map(({ id, name, specialty, active }) => [id, name, specialty, active]));
         serverWorkers = workers;
         if (activeWorker) activeWorker = getWorkers().find((worker) => worker.code === activeWorker.code) || null;
-        if (changed) refreshTicketView(root);
+        if (changed || (root?.dataset.view === "history" && root.dataset.historyDate !== localDate())) refreshTicketView(root);
       } catch { /* Se conserva la copia local si el servidor no está disponible. */ }
     };
     const getTickets = () => {
@@ -703,8 +717,11 @@ Error generating stack: `+g.message+`
       document.documentElement.classList.toggle("paper-overlay-open", Boolean(document.querySelector("#paper-tickets, #paper-prices")));
     }
 
+    let navigationVersion = 0;
     async function openPrices() {
+      const version = ++navigationVersion;
       try { await localStorage.ready; } catch { alert("No se pudo cargar la configuración de tickets del servidor."); return; }
+      if (version !== navigationVersion) return;
       document.querySelector("#paper-prices [data-close]")?.click();
       document.querySelector('#paper-tickets [data-pt="back"]')?.click();
       if (document.querySelector(".salon-app")?.classList.contains("team-page")) document.querySelector(".menu nav button")?.click();
@@ -766,20 +783,18 @@ Error generating stack: `+g.message+`
         if (!button) return;
         const name = button.dataset.deleteService;
         if (name === "PRODUCTO") return;
-        showStyledConfirm(page, { title: "¿Eliminar este servicio?", message: `${name} dejará de estar disponible. Los tickets anteriores se conservarán.`, confirmText: "Sí, eliminar", danger: true, onConfirm: () => {
+        showStyledConfirm(page, { title: "¿Eliminar este servicio?", message: `${name} dejará de estar disponible. Los tickets anteriores se conservarán.`, confirmText: "Sí, eliminar", danger: true, onConfirm: async () => {
           const prices = { ...getPrices() };
           delete prices[name];
-          try {
-            if (PAPER_SERVICES.includes(name)) localStorage.setItem(DELETED_SERVICES_KEY, JSON.stringify([...getDeletedServices(), name]));
-            else localStorage.setItem(CUSTOM_SERVICES_KEY, JSON.stringify(getCustomServices().filter((service) => service !== name)));
-            localStorage.setItem(PRICES_KEY, JSON.stringify(prices));
-            const specialties = { ...getServiceSpecialties() };
-            delete specialties[name];
-            localStorage.setItem(SERVICE_SPECIALTIES_KEY, JSON.stringify(specialties));
-            const requirements = { ...getServiceSupplyRequirements() };
-            delete requirements[name];
-            localStorage.setItem(SERVICE_SUPPLIES_KEY, JSON.stringify(requirements));
-          } catch { alert("No se pudo eliminar el servicio en este navegador."); return; }
+          const specialties = { ...getServiceSpecialties() };
+          const requirements = { ...getServiceSupplyRequirements() };
+          delete specialties[name];
+          delete requirements[name];
+          specialties.__requiresSupplies = requirements;
+          const membership = PAPER_SERVICES.includes(name)
+            ? { [DELETED_SERVICES_KEY]: [...getDeletedServices(), name] }
+            : { [CUSTOM_SERVICES_KEY]: getCustomServices().filter(service => service !== name) };
+          if (!await localStorage.saveSettings({ ...membership, [PRICES_KEY]: prices, [SERVICE_SPECIALTIES_KEY]: specialties })) return;
           button.closest(".pt-price-service")?.remove();
           selectedTicketServices.delete(name);
           selectedTicketSupplies.delete(name);
@@ -792,9 +807,9 @@ Error generating stack: `+g.message+`
       page.querySelector("[data-add-service]").addEventListener("click", () => {
         const modal = document.createElement("div");
         modal.className = "pt-modal-backdrop";
-        modal.innerHTML = `<form class="pt-modal"><div class="pt-modal-head"><h2>Añadir servicio</h2><button type="button" data-close-add aria-label="Cerrar">×</button></div><label>Nombre del servicio<input name="serviceName" maxlength="80" required autofocus></label><label>Precio (COP)<input name="amount" data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" required></label>${roleChoices("roles", [])}<label>Requiere insumos<select name="requiresSupplies" required><option value="no" selected>No</option><option value="yes">Sí</option></select></label><div class="pt-modal-actions"><button type="button" data-close-add>Cancelar</button><button class="primary" type="submit">Guardar servicio</button></div></form>`;
+        modal.innerHTML = `<form class="pt-modal"><div class="pt-modal-head"><h2>Añadir servicio</h2><button type="button" data-close-add aria-label="Cerrar">×</button></div><label>Nombre del servicio<input name="serviceName" maxlength="80" required autofocus></label><label>Precio (COP)<input name="amount" data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" placeholder="Sin precio fijo"></label>${roleChoices("roles", [])}<label>Requiere insumos<select name="requiresSupplies" required><option value="no" selected>No</option><option value="yes">Sí</option></select></label><div class="pt-modal-actions"><button type="button" data-close-add>Cancelar</button><button class="primary" type="submit">Guardar servicio</button></div></form>`;
         modal.querySelectorAll("[data-close-add]").forEach((button) => button.addEventListener("click", () => modal.remove()));
-        modal.querySelector("form").addEventListener("submit", (event) => {
+        modal.querySelector("form").addEventListener("submit", async (event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
           const name = String(form.get("serviceName") || "").trim().replace(/\s+/g, " ").toLocaleUpperCase("es-CO");
@@ -804,21 +819,23 @@ Error generating stack: `+g.message+`
           if (!name || name.length > 80) return alert("Escribe un nombre de servicio válido.");
           if (!roles.length) return alert("Elige al menos un rol para el servicio.");
           if (getAllServices().some((existing) => existing.toLocaleUpperCase("es-CO") === name)) return alert("Ese servicio ya existe.");
-          if (raw === "" || !Number.isInteger(amount) || amount < 0 || amount > 10000000) return alert("Escribe un precio válido.");
-          try {
-            localStorage.setItem(PRICES_KEY, JSON.stringify({ ...getPrices(), [name]: amount }));
-            localStorage.setItem(SERVICE_SPECIALTIES_KEY, JSON.stringify({ ...getServiceSpecialties(), [name]: roles }));
-            localStorage.setItem(SERVICE_SUPPLIES_KEY, JSON.stringify({ ...getServiceSupplyRequirements(), [name]: form.get("requiresSupplies") === "yes" }));
-            if (PAPER_SERVICES.includes(name)) localStorage.setItem(DELETED_SERVICES_KEY, JSON.stringify([...getDeletedServices()].filter((service) => service !== name)));
-            else localStorage.setItem(CUSTOM_SERVICES_KEY, JSON.stringify([...getCustomServices(), name]));
-          } catch { return alert("No se pudo guardar el servicio en este navegador."); }
-          page.querySelector(".pt-price-list").insertAdjacentHTML("beforeend", priceField(name, amount));
+          if (raw && (!Number.isInteger(amount) || amount < 0 || amount > 10000000)) return alert("Escribe un precio válido.");
+          const prices = { ...getPrices() };
+          if (raw) prices[name] = amount;
+          else delete prices[name];
+          const requirements = { ...getServiceSupplyRequirements(), [name]: form.get("requiresSupplies") === "yes" };
+          const specialties = { ...getServiceSpecialties(), [name]: roles, __requiresSupplies: requirements };
+          const membership = PAPER_SERVICES.includes(name)
+            ? { [DELETED_SERVICES_KEY]: [...getDeletedServices()].filter(service => service !== name) }
+            : { [CUSTOM_SERVICES_KEY]: [...getCustomServices(), name] };
+          if (!await localStorage.saveSettings({ ...membership, [PRICES_KEY]: prices, [SERVICE_SPECIALTIES_KEY]: specialties })) return;
+          page.querySelector(".pt-price-list").insertAdjacentHTML("beforeend", priceField(name, prices[name]));
           modal.remove();
         });
         page.append(modal);
         modal.querySelector('[name="serviceName"]').focus();
       });
-      page.querySelector("form").addEventListener("submit", (event) => {
+      page.querySelector("form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         const updated = {};
@@ -836,8 +853,9 @@ Error generating stack: `+g.message+`
           if (!Number.isInteger(amount) || amount < 0 || amount > 10000000) return alert(`Precio inválido: ${name}`);
           updated[name] = amount;
         }
-        try { localStorage.setItem(PRICES_KEY, JSON.stringify(updated)); localStorage.setItem(SERVICE_SPECIALTIES_KEY, JSON.stringify(specialties)); localStorage.setItem(SERVICE_SUPPLIES_KEY, JSON.stringify(requirements)); }
-        catch { alert("No se pudieron guardar los cambios en el servidor."); return; }
+        specialties.__requiresSupplies = requirements;
+        saveStatus.textContent = "";
+        if (!await localStorage.saveSettings({ [PRICES_KEY]: updated, [SERVICE_SPECIALTIES_KEY]: specialties })) return;
         saveStatus.textContent = "Cambios guardados.";
         const ticketsPage = document.querySelector("#paper-tickets");
         if (ticketsPage) renderTickets(ticketsPage);
@@ -854,6 +872,7 @@ Error generating stack: `+g.message+`
     tableroLauncher.type = "button";
     tableroLauncher.textContent = "Tablero";
     tableroLauncher.addEventListener("click", () => {
+      navigationVersion++;
       document.querySelector("#paper-prices [data-close]")?.click();
       document.querySelector('#paper-tickets [data-pt="back"]')?.click();
       if (document.querySelector(".salon-app")?.classList.contains("team-page")) document.querySelector(".menu nav button")?.click();
@@ -864,7 +883,7 @@ Error generating stack: `+g.message+`
     const showTickets = () => {
       ticketWorkspace = "tickets";
       const existing = document.querySelector("#paper-tickets");
-      if (existing) { existing.dataset.view = ticketWorkspace; renderTickets(existing); if (!openTicketId && !ticketClientName.trim()) requestTicketCustomer(existing); return; }
+      if (existing) { navigationVersion++; existing.dataset.view = ticketWorkspace; renderTickets(existing); if (!openTicketId && !ticketClientName.trim()) requestTicketCustomer(existing); return; }
       openTickets(ticketWorkspace, true);
     };
     launcher.addEventListener("click", showTickets);
@@ -879,7 +898,7 @@ Error generating stack: `+g.message+`
     const showHistory = () => {
       ticketWorkspace = "history";
       const existing = document.querySelector("#paper-tickets");
-      if (existing) { existing.dataset.view = ticketWorkspace; renderTickets(existing); return; }
+      if (existing) { navigationVersion++; existing.dataset.view = ticketWorkspace; renderTickets(existing); return; }
       openTickets(ticketWorkspace);
     };
     historyLauncher.addEventListener("click", showHistory);
@@ -927,6 +946,7 @@ Error generating stack: `+g.message+`
       drawer.querySelector("[data-drawer-appearance]").hidden = true;
     } else drawerNav.append(tableroLauncher, launcher, historyLauncher);
     function runDrawerMenuAction(label) {
+      navigationVersion++;
       closeDrawer();
       if (label === "Servicios y precios") { openPrices(); return; }
       const currentSource = [...document.querySelectorAll(".salon-app .menu nav button")].find((button) => button.textContent.trim() === label);
@@ -1196,11 +1216,25 @@ Error generating stack: `+g.message+`
       modal.querySelector("[data-delete-cancel]").addEventListener("click", close);
       modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
       modal.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
-      modal.querySelector("[data-delete-confirm]").addEventListener("click", () => {
+      modal.querySelector("[data-delete-confirm]").addEventListener("click", async (event) => {
+        const confirm = event.currentTarget;
+        if (confirm.disabled) return;
         const currentView = root.dataset.view || ticketWorkspace;
         const tickets = getTickets();
         if (!tickets.some((line) => (line.ticketGroupId || line.id) === id)) { close(); renderTickets(root); return; }
-        saveTickets(tickets.filter((line) => (line.ticketGroupId || line.id) !== id));
+        const currentGroup = tickets.filter(line => (line.ticketGroupId || line.id) === id);
+        if (JSON.stringify(currentGroup) !== JSON.stringify(group)) {
+          close();
+          alert("El ticket cambió en otra pantalla. Revisa los servicios antes de borrarlo.");
+          renderTickets(root);
+          return;
+        }
+        confirm.disabled = true;
+        if (!await saveTickets(tickets.filter(line => (line.ticketGroupId || line.id) !== id))) {
+          confirm.disabled = false;
+          return;
+        }
+        ticketDrafts.delete(id);
         if (openTicketId === id) { openTicketId = ""; ticketClientName = ""; pendingTicketLines = []; editingPendingIndex = -1; selectedTicketServices.clear(); selectedTicketSupplies = new Map(); selectedProductName = ""; overriddenPrices.clear(); }
         ticketWorkspace = currentView;
         lastNonBoardInteraction = Date.now();
@@ -1226,11 +1260,19 @@ Error generating stack: `+g.message+`
       modal.querySelector("[data-reopen-cancel]").addEventListener("click", close);
       modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
       modal.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
-      modal.querySelector("[data-reopen-confirm]").addEventListener("click", () => {
+      modal.querySelector("[data-reopen-confirm]").addEventListener("click", async (event) => {
+        const confirm = event.currentTarget;
+        if (confirm.disabled) return;
         const tickets = getTickets();
         const current = tickets.filter((line) => (line.ticketGroupId || line.id) === id);
         if (!current.length || current.some((line) => line.ticketStatus === "open")) { close(); renderTickets(root); return; }
-        saveTickets(tickets.map((line) => (line.ticketGroupId || line.id) === id ? { ...line, ticketStatus: "open", closedAt: null, enteredAt: null, exportedAt: null } : line));
+        if (JSON.stringify(current) !== JSON.stringify(group)) {
+          close(); renderTickets(root); alert("El ticket cambió. Revisa los datos antes de reabrirlo."); return;
+        }
+        confirm.disabled = true;
+        const saved = await saveTickets(tickets.map(line => (line.ticketGroupId || line.id) === id ? { ...line, ticketStatus: "open", closedAt: null, enteredAt: null, exportedAt: null } : line));
+        confirm.disabled = false;
+        if (!saved) return;
         showOpenHistoryTickets = true;
         close();
         renderTickets(root);
@@ -1262,7 +1304,17 @@ Error generating stack: `+g.message+`
         return (Number(a.ticketNumber) - Number(b.ticketNumber)) || String(a.id).localeCompare(String(b.id));
       });
       let activeGroup = openGroups.find((group) => group.id === openTicketId);
-      if (openTicketId && !activeGroup) { openTicketId = ""; ticketScreen = "new"; activeGroup = null; }
+      if (openTicketId && !activeGroup) {
+        if (ticketSaveInFlight || root.querySelector("[data-delete-confirm]:disabled")) return;
+        if (pendingTicketLines.length) {
+          ticketDrafts.set(openTicketId, { lines: pendingTicketLines, customerName: ticketClientName, customerLastName: ticketClientLastName, workerCode: activeWorker?.code });
+        }
+        openTicketId = ""; ticketScreen = "open";
+        pendingTicketLines = []; editingPendingIndex = -1; ticketClientName = ""; ticketClientLastName = "";
+        selectedTicketService = ""; selectedTicketServices.clear(); selectedTicketSupplies.clear(); overriddenPrices.clear();
+        selectedProductName = ""; ticketAmount = "";
+        root.querySelector("[data-open-worker-modal]")?.remove();
+      }
       const customerName = activeGroup?.customerName ?? ticketClientName;
       const customerLastName = activeGroup?.customerLastName ?? "";
       const service = getAllServices().includes(selectedTicketService) ? selectedTicketService : "";
@@ -1286,7 +1338,7 @@ Error generating stack: `+g.message+`
         const total = group.lines.reduce((sum, line) => sum + Number(line.amount || 0), 0);
         const finalized = isFinalized(group);
         const entered = finalized && group.lines.every(isEntered);
-        const dateValue = String(group.lines[0]?.localDate || group.createdAt || "").slice(0, 10);
+        const dateValue = receiptDate(group);
         const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
         const shortDate = dateMatch ? `${dateMatch[3]}/${dateMatch[2]}` : "—";
         const paymentMethod = group.lines.find((line) => ["cash", "credit_card", "transfer"].includes(line.paymentMethod))?.paymentMethod || "";
@@ -1296,12 +1348,9 @@ Error generating stack: `+g.message+`
         return `<li class="pt-history-ticket"><article class="pt-receipt${finalized ? " pt-reopenable" : ""}" data-ticket-group="${esc(group.id)}" tabindex="0" aria-label="Ticket #${esc(group.ticketNumber)}. ${finalized ? "Toca para reabrir. " : ""}Mantén presionado para borrar." ${finalized ? `data-reopen-ticket="${esc(group.id)}"` : ""}><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-history-payment" role="radiogroup" aria-label="Forma de pago del ticket #${esc(group.ticketNumber)}">${paymentOptions}</div><div class="pt-receipt-foot"><span class="pt-receipt-status">${finalized ? "Finalizado" : "Abierto"}</span><div class="pt-receipt-check">${checkbox}</div></div></article></li>`;
       }).join("")}</ul>` : `<p class="pt-empty">${emptyMessage}</p>`;
       const finalizedGroups = historyGroups.filter(isFinalized);
-      const finalizedTodayGroups = finalizedGroups.filter((group) => {
-        const closedAt = group.lines.map((line) => line.closedAt).filter(Boolean).sort().at(-1);
-        if (!closedAt) return String(group.lines[0]?.localDate || group.createdAt || "").slice(0, 10) === localDate();
-        const date = new Date(closedAt);
-        return !Number.isNaN(date.getTime()) && `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` === localDate();
-      });
+      const today = localDate();
+      root.dataset.historyDate = today;
+      const finalizedTodayGroups = finalizedGroups.filter(group => receiptDate(group) === today);
       const finalizedOlderGroups = finalizedGroups.filter((group) => !finalizedTodayGroups.includes(group));
       const finalizedDayMarkup = `<div class="pt-history-day"><h3>Hoy <span>${finalizedTodayGroups.length}</span></h3>${historyList(finalizedTodayGroups, "No hay tickets finalizados hoy.")}</div>${finalizedOlderGroups.length ? `<div class="pt-history-day"><h3>Anteriores <span>${finalizedOlderGroups.length}</span></h3>${historyList(finalizedOlderGroups, "No hay tickets anteriores.")}</div>` : ""}`;
       const historyMarkup = `<details class="pt-history-section" data-history="finalized" ${showFinalizedTickets ? "open" : ""}><summary>Tickets finalizados <span>${finalizedGroups.length}</span></summary>${finalizedDayMarkup}</details>`;
@@ -1634,6 +1683,10 @@ Error generating stack: `+g.message+`
         const cancelHold = () => { if (holdTimer !== null) clearTimeout(holdTimer); holdTimer = null; };
         card.addEventListener("pointerdown", (event) => {
           if (event.button !== 0) return;
+          cancelHold();
+          if (!event.isPrimary) return;
+          const startX = event.clientX, startY = event.clientY;
+          card.onpointermove = move => { if (Math.hypot(move.clientX - startX, move.clientY - startY) > 10) cancelHold(); };
           longPressed = false;
           holdTimer = setTimeout(() => { holdTimer = null; longPressed = true; deleteService(card.dataset.historyService); }, 650);
         });
@@ -1652,6 +1705,14 @@ Error generating stack: `+g.message+`
       }));
       const save = async (keepOpen, selectedOpenWorker = null) => {
         if (ticketSaveInFlight) return;
+        if (activeGroup) {
+          const currentGroup = getTickets().filter(line => line.ticketGroupId === activeGroup.id);
+          if (JSON.stringify(currentGroup) !== JSON.stringify(activeGroup.lines)) {
+            alert("El ticket cambió en otra pantalla. Revisa los servicios antes de guardar.");
+            renderTickets(root);
+            return;
+          }
+        }
         if (keepOpen && !selectedOpenWorker?.code) return alert("Selecciona para quién quedará abierto el ticket.");
         const currentCustomerName = activeGroup?.customerName || ticketClientName.trim();
         if (!currentCustomerName || (!pendingTicketLines.length && !activeGroup)) return alert("Escribe el nombre del cliente y selecciona al menos un servicio.");
@@ -1690,6 +1751,7 @@ Error generating stack: `+g.message+`
       const tickets = getTickets();
       const ticket = tickets.find((entry) => entry.id === ticketId);
       if (!ticket) return;
+      const originalLine = JSON.stringify(ticket);
       const modal = document.createElement("div");
       modal.className = "pt-modal-backdrop";
       const workers = getWorkers();
@@ -1723,7 +1785,7 @@ Error generating stack: `+g.message+`
       updateServices();
       const close = () => modal.remove();
       modal.querySelectorAll('[data-pt="close"]').forEach((button) => button.addEventListener("click", close));
-      modal.querySelector("form").addEventListener("submit", (event) => {
+      modal.querySelector("form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
         const rawAmount = String(form.get("amount") || "").trim();
@@ -1734,6 +1796,9 @@ Error generating stack: `+g.message+`
         if (!worker) { alert("No encontramos una persona activa con ese código."); return; }
         const productName = String(form.get("productName") || "").trim();
         if (serviceSelect.value === "PRODUCTO" && (!productName || productName.length > 80)) { alert("Escribe el nombre del producto."); return; }
+        const currentTickets = getTickets();
+        const current = currentTickets.find(line => line.id === ticket.id);
+        if (JSON.stringify(current) !== originalLine) { alert("Este servicio cambió en otra pantalla. Vuelve a abrirlo para editarlo."); close(); renderTickets(root); return; }
         ticket.serviceName = String(form.get("serviceName"));
         ticket.productName = ticket.serviceName === "PRODUCTO" ? productName : null;
         ticket.supplies = validUsage(editedSupplies);
@@ -1742,7 +1807,7 @@ Error generating stack: `+g.message+`
         ticket.workerName = worker.name;
         ticket.workerSpecialty = worker.specialty || ticket.workerSpecialty || ticketLineSpecialty(ticket);
         ticket.editedAt = new Date().toISOString();
-        saveTickets(tickets);
+        if (!await saveTickets(currentTickets.map(line => line.id === ticket.id ? ticket : line))) return;
         close();
         renderTickets(root);
       });
@@ -1771,11 +1836,14 @@ Error generating stack: `+g.message+`
     }
 
     async function openTickets(view = "tickets", promptForCustomer = false) {
+      const version = ++navigationVersion;
       ticketWorkspace = view === "history" ? "history" : "tickets";
       try { await localStorage.ready; } catch { alert("No se pudieron cargar los tickets del servidor."); return; }
+      if (version !== navigationVersion) return;
       const existing = document.querySelector("#paper-tickets");
       if (existing) { existing.dataset.view = ticketWorkspace; renderTickets(existing); if (promptForCustomer && ticketWorkspace === "tickets" && !openTicketId && !ticketClientName.trim()) requestTicketCustomer(existing); return; }
       await refreshWorkersFromServer();
+      if (version !== navigationVersion) return;
       const root = ticketPage();
       document.body.append(root);
       syncTicketAppearance(launcher);

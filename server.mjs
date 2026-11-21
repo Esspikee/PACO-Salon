@@ -1,4 +1,5 @@
 import http from 'node:http'
+import {spawn} from 'node:child_process'
 import os from 'node:os'
 import path from 'node:path'
 import {randomUUID} from 'node:crypto'
@@ -53,7 +54,7 @@ export class SalonStore {
     this.statePath = path.join(dataDirectory, 'tablero.json')
     this.state = null
     this.undo = []
-    this.operations = new Map()
+    this.operations = new Set()
   }
 
   async initialize() {
@@ -87,7 +88,7 @@ export class SalonStore {
 
   async apply(body) {
     if (!body || typeof body !== 'object' || typeof body.action !== 'string') throw new HttpError(400, 'Acción inválida.')
-    if (typeof body.operation_id === 'string' && this.operations.has(body.operation_id)) return clone(this.operations.get(body.operation_id))
+    if (typeof body.operation_id === 'string' && this.operations.has(body.operation_id)) return this.snapshot()
     if (body.version !== this.state.version) throw new HttpError(409, 'La fila cambió en otra pantalla. Ya se actualizó; repite la acción si todavía hace falta.')
 
     const previousWorkers = clone(this.state.workers)
@@ -135,7 +136,7 @@ export class SalonStore {
       label = 'Mover a ' + person.name + ' al final'
     } else if (body.action === 'save') {
       const schedule = validateSchedule(body.schedule)
-      if (!body.name?.trim() || body.name.length > 80 || !['MANICURISTA', 'ESTILISTA', 'AUXILIAR'].includes(body.specialty) || typeof body.active !== 'boolean') throw new HttpError(400, 'Completa el nombre y la especialidad.')
+      if (typeof body.name !== 'string' || !body.name.trim() || body.name.length > 80 || !['MANICURISTA', 'ESTILISTA', 'AUXILIAR'].includes(body.specialty) || typeof body.active !== 'boolean') throw new HttpError(400, 'Completa el nombre y la especialidad.')
       if (body.specialty === 'AUXILIAR') body = {...body, active: false}
       if (body.worker_id) {
         const person = workers.find(worker => worker.id === body.worker_id)
@@ -167,7 +168,7 @@ export class SalonStore {
     this.undo = nextUndo
     const result = this.snapshot()
     if (typeof body.operation_id === 'string' && body.operation_id.length <= 100) {
-      this.operations.set(body.operation_id, result)
+      this.operations.add(body.operation_id)
       if (this.operations.size > 200) this.operations.delete(this.operations.keys().next().value)
     }
     return result
@@ -221,18 +222,29 @@ export async function createSalonServer(options = {}) {
   }
   const updateTickets = async body => {
     if (!body || !['changes', 'migrate'].includes(body.action) || !Array.isArray(body.upsert) || body.upsert.length > 500 || !Array.isArray(body.deleteIds) || body.deleteIds.length > 500 || !body.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) throw new HttpError(400, 'Cambio de tickets inválido.')
-    if (body.activity !== undefined && (body.action !== 'changes' || !body.activity || !['open', 'finalized'].includes(body.activity.status) || typeof body.activity.workerName !== 'string' || !body.activity.workerName.trim() || body.activity.workerName.length > 80 || typeof body.activity.groupId !== 'string' || !body.upsert.some(ticket => ticket.ticketGroupId === body.activity.groupId && ticket.ticketStatus === body.activity.status))) throw new HttpError(400, 'Actividad de ticket inválida.')
+    if (body.activity !== undefined && (body.action !== 'changes' || !body.activity || !['open', 'finalized'].includes(body.activity.status) || typeof body.activity.workerName !== 'string' || !body.activity.workerName.trim() || body.activity.workerName.length > 80 || typeof body.activity.groupId !== 'string' || !body.upsert.some(ticket => ticket?.ticketGroupId === body.activity.groupId && ticket.ticketStatus === body.activity.status))) throw new HttpError(400, 'Actividad de ticket inválida.')
     const next = ticketSnapshot()
     const byId = new Map(next.tickets.map(ticket => [ticket.id, ticket]))
+    const touched = new Set(Object.keys(body.settings).map(key => 'setting:' + key))
+    const revisions = next.revisions ||= {}
+    if (body.operationId !== undefined && (typeof body.operationId !== 'string' || !body.operationId || body.operationId.length > 100)) throw new HttpError(400, 'Identificador de operación inválido.')
+    if (body.expected !== undefined) {
+      if (!body.expected || typeof body.expected !== 'object' || Array.isArray(body.expected)) throw new HttpError(400, 'Versiones de ticket inválidas.')
+      for (const [key, version] of Object.entries(body.expected)) {
+        if ((revisions[key] || 0) !== version) throw new HttpError(409, 'Otra pantalla cambió este ticket o ajuste. Revisa la versión actualizada antes de volver a guardar.')
+      }
+    }
     if (body.action === 'changes') for (const id of body.deleteIds) {
       if (typeof id !== 'string') throw new HttpError(400, 'Identificador inválido.')
+      if (byId.has(id)) touched.add('group:' + byId.get(id).ticketGroupId)
       byId.delete(id)
     }
     const groupNumbers = new Map()
-    for (const ticket of byId.values()) if (ticket.ticketGroupId && Number.isSafeInteger(ticket.ticketNumber)) groupNumbers.set(ticket.ticketGroupId, ticket.ticketNumber)
+    for (const ticket of next.tickets) if (ticket.ticketGroupId && Number.isSafeInteger(ticket.ticketNumber)) groupNumbers.set(ticket.ticketGroupId, ticket.ticketNumber)
     for (const ticket of body.upsert) {
       if (!ticket || typeof ticket.id !== 'string' || !ticket.id || ticket.id.length > 100 || typeof ticket.ticketGroupId !== 'string' || !ticket.ticketGroupId || typeof ticket.workerName !== 'string' || typeof ticket.serviceName !== 'string' || !Number.isSafeInteger(ticket.amount) || ticket.amount < 0 || ticket.amount > 10_000_000) throw new HttpError(400, 'El ticket contiene datos inválidos.')
       if (body.action === 'migrate' && byId.has(ticket.id)) continue
+      touched.add('group:' + ticket.ticketGroupId)
       const copy = clone(ticket)
       let number = groupNumbers.get(copy.ticketGroupId)
       if (number === undefined) {
@@ -278,6 +290,8 @@ export async function createSalonServer(options = {}) {
       try {JSON.parse(value)} catch {throw new HttpError(400, 'Ajuste de tickets inválido.')}
       if (body.action !== 'migrate' || next.settings[key] === undefined) next.settings[key] = value
     }
+    for (const key of touched) revisions[key] = (revisions[key] || 0) + 1
+    if (body.operationId) next.recentOperations = [...(next.recentOperations || []), body.operationId].slice(-256)
     await saveTicketState(next)
     return ticketSnapshot()
   }
@@ -296,6 +310,8 @@ export async function createSalonServer(options = {}) {
     const lines = activity.status === 'finalized' ? ticketState.tickets.filter(ticket => ticket.ticketGroupId === activity.groupId && ticket.ticketStatus === 'finalized') : []
     const ticket = lines.length ? {
       groupId: activity.groupId,
+      revision: ticketState.revisions['group:' + activity.groupId],
+      closedAt: lines[0].closedAt,
       ticketNumber: lines[0].ticketNumber,
       customerName: lines[0].customerName || 'Cliente',
       customerLastName: lines[0].customerLastName || '',
@@ -401,8 +417,15 @@ export async function startSalonServer({host = process.env.HOST || '0.0.0.0', po
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  startSalonServer().catch(error => {
-    if (error.code === 'EADDRINUSE') console.error('El puerto 8080 ya está en uso. Es posible que el servidor ya esté abierto.')
+  startSalonServer().then(({server}) => {
+    if (process.platform === 'win32' && process.env.SALON_OPEN_BROWSER === '1') {
+      const url = `http://localhost:${server.address().port}/main`
+      const browser = spawn('explorer.exe', [url], {stdio: 'ignore', windowsHide: true})
+      browser.on('error', () => console.error(`Abre el panel en ${url}`))
+      browser.unref()
+    }
+  }).catch(error => {
+    if (error.code === 'EADDRINUSE') console.error(`El puerto ${process.env.PORT || 8080} ya está en uso. Es posible que el servidor ya esté abierto.`)
     else console.error('No se pudo iniciar el servidor:', error.message)
     process.exitCode = 1
   })
