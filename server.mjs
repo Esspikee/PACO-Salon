@@ -327,6 +327,7 @@ export async function createSalonServer(options = {}) {
     ['/manicuristas', 'manicuristas.html'], ['/manicuristas.html', 'manicuristas.html'],
     ['/estilistas', 'estilistas.html'], ['/estilistas.html', 'estilistas.html'], ['/Estilistas.html', 'estilistas.html'],
     ['/juan-pablo', 'juan-pablo.html'], ['/juan-pablo.html', 'juan-pablo.html'],
+    ['/juan-pablo-2.0', 'juan-pablo-2.0.html'], ['/juan-pablo-2.0.html', 'juan-pablo-2.0.html'],
   ])
 
   const server = http.createServer(async (request, response) => {

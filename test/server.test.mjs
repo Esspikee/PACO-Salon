@@ -1117,7 +1117,7 @@ test('ticket workers include unchecked employees and keep their order across tab
 })
 
 test('selecting a service adds a ticket line and marks missing prices for direct entry', async () => {
-  const html = await readFile(path.join(root, 'htmls', 'main.html'), 'utf8')
+  const html = (await readFile(path.join(root, 'htmls', 'main.html'), 'utf8')).replace(/\r\n/g, '\n')
   const start = html.indexOf('      content.querySelectorAll("[data-service]").forEach((button) => button.addEventListener("click", () => {')
   const end = html.indexOf('      content.querySelectorAll("[data-service]").forEach((button) => {\n        let timer', start)
   assert.ok(start > 0 && end > start)
@@ -1176,18 +1176,24 @@ test('Valor accepts a numeric quantity for each insumo on a pending service', as
   assert.ok(start > 0 && end > start)
   const listeners = {}
   const input = {
-    dataset: {pendingSupply: '0', supplyIndex: '0'},
+    dataset: {pendingSupply: '0', name: 'TINTE'},
+    dispatchEvent: event => listeners[event.type](),
     value: '0',
     addEventListener: (event, handler) => { listeners[event] = handler },
     blur() {}
   }
+  let onStep
   let editor
   const line = {serviceName: 'COLOR', supplies: []}
   const context = {
     pendingTicketLines: [line], requiresSupplies: () => true,
     validUsage: usage => usage.filter(item => Number.isSafeInteger(item.quantity) && item.quantity > 0),
     getSupplies: () => ['TINTE'], esc: value => value,
-    document: {createElement: () => ({querySelectorAll: () => [input]})},
+    Event,
+    document: {createElement: () => ({
+      querySelectorAll: () => [input],
+      addEventListener: (type, handler) => { if (type === 'click') onStep = handler }
+    })},
     valuePane: {querySelector: () => ({before: node => { editor = node }})}
   }
   runInNewContext(html.slice(start, end), context)
@@ -1196,6 +1202,13 @@ test('Valor accepts a numeric quantity for each insumo on a pending service', as
   input.value = '3'
   listeners.input()
   assert.equal(line.supplies[0].name, 'TINTE')
+  assert.equal(line.supplies[0].quantity, 3)
+  const step = delta => onStep({target: {closest: () => ({
+    dataset: {step: String(delta)}, closest: () => ({querySelector: () => input})
+  })}})
+  step(1)
+  assert.equal(line.supplies[0].quantity, 4)
+  step(-1)
   assert.equal(line.supplies[0].quantity, 3)
   input.value = '0'
   listeners.input()
@@ -1263,7 +1276,7 @@ test('a service without a fixed price keeps Eliminar and updates total from its 
 })
 
 test('swiping over services scrolls without starting a drag or selecting', async () => {
-  const html = await readFile(path.join(root, 'htmls', 'main.html'), 'utf8')
+  const html = (await readFile(path.join(root, 'htmls', 'main.html'), 'utf8')).replace(/\r\n/g, '\n')
   const start = html.indexOf('      content.querySelectorAll("[data-service]").forEach((button) => {\n        let timer')
   const end = html.indexOf('      content.querySelectorAll("[data-edit-supplies]")', start)
   assert.ok(start > 0 && end > start)
