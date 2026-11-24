@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import os from 'node:os'
-import {mkdtemp, readFile, rm} from 'node:fs/promises'
+import {mkdtemp, readFile, readdir, rm, writeFile} from 'node:fs/promises'
 import {fileURLToPath} from 'node:url'
 import {Script, runInNewContext} from 'node:vm'
 import {createSalonServer} from '../server.mjs'
@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(here, '..')
 
 test('all five standalone views contain valid inline JavaScript', async () => {
-  for (const name of ['main', 'auxiliar', 'estilistas', 'manicuristas', 'juan-pablo']) {
+  for (const name of ['main', 'auxiliar', 'estilistas', 'manicuristas', 'juan-pablo-2.0', 'william']) {
     const html = await readFile(path.join(root, 'htmls', name + '.html'), 'utf8')
     assert.equal(html.indexOf('</html>'), html.trimEnd().length - '</html>'.length, name)
     assert.equal(html.split('async function openTickets(').length, 2, name)
@@ -22,7 +22,7 @@ test('all five standalone views contain valid inline JavaScript', async () => {
 })
 
 async function launch(dataDirectory) {
-  const result = await createSalonServer({dataDirectory, seedPath: path.join(root, 'initial-team.json'), publicDirectory: path.join(root, 'htmls')})
+  const result = await createSalonServer({dataDirectory, seedPath: path.join(root, 'initial-team.json'), publicDirectory: path.join(root, 'htmls'), backupSources: false})
   await new Promise((resolve, reject) => {result.server.once('error', reject); result.server.listen(0, '127.0.0.1', resolve)})
   return {...result, url: `http://127.0.0.1:${result.server.address().port}`}
 }
@@ -38,7 +38,7 @@ test('open tickets display oldest first in every view, even after adding service
     {ticketGroupId: 'middle', ticketNumber: 2, ticketStatus: 'open', createdAt: '2026-11-19T10:00:00.000Z'},
     {ticketGroupId: 'old', ticketNumber: 1, ticketStatus: 'open', createdAt: '2026-11-21T10:00:00.000Z'}
   ]
-  for (const name of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
+  for (const name of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0']) {
     const html = await readFile(path.join(root, 'htmls', `${name}.html`), 'utf8')
     const start = html.indexOf('      const groups = new Map();', html.indexOf('const historyScroll ='))
     const end = html.indexOf('      let activeGroup =', start)
@@ -140,15 +140,17 @@ test('serves the four views with server connectivity enabled', async t => {
     assert.match(html, /class="pt-open pt-open-home"/)
     assert.match(html, /workers\.find\(\(worker\) => worker\.code === assigneeCode\) \|\| \[\.\.\.\(group\?\.lines \|\| \[\]\)\]\.reverse\(\)/)
     assert.match(html, /renderTickets\(root\);\s+root\.scrollTop = 0;/)
-    if (route !== '/main') assert.match(html, /const pendingGroups = historyGroups\.filter\(\(group\) => isFinalized\(group\) && !group\.lines\.every\(isEntered\)\)/)
     assert.match(html, /const finalizedGroups = historyGroups\.filter\(isFinalized\)/)
+    assert.match(html, /const pendingGroups = finalizedGroups\.filter\(\(group\) => !group\.lines\.every\(isEntered\)\)/)
+    assert.match(html, /<summary>Tickets no ingresados <span>\$\{pendingGroups\.length\}<\/span>/)
+    assert.match(html, /<summary>Tickets ingresados <span>\$\{exportedGroups\.length\}<\/span>/)
     if (route === '/main') {
       assert.match(html, /const historyOpenMarkup = `<details class="pt-history-section" data-history="open"/)
       assert.match(html, /<summary>Tickets abiertos <span>\$\{openGroups\.length\}<\/span><\/summary>\$\{openList\}/)
-      assert.match(html, /<summary>Tickets finalizados <span>\$\{finalizedGroups\.length\}<\/span>/)
       assert.match(html, /<h2>Historial de tickets<\/h2>\$\{historyOpenMarkup\}\$\{historyMarkup\}/)
     }
-    assert.match(html, /else showFinalizedTickets = section\.open/)
+    assert.match(html, /section\.dataset\.history === "pending"\) showPendingTickets = section\.open/)
+    assert.match(html, /section\.dataset\.history === "exported"\) showExportedTickets = section\.open/)
     assert.match(html, /openTickets\("history"\)/)
     assert.match(html, /#paper-tickets \.pt-ticket-actions\{display:grid;grid-template-columns:auto auto minmax\(0,1fr\) auto auto/)
     assert.match(html, /\.app-controls \.undo-button,\.salon-app \.app-controls \.menu,\.salon-app \.app-controls \.appearance>summary,body>\.fullscreen-button\{display:none!important\}/)
@@ -198,15 +200,46 @@ test('serves Juan Pablo phone view with personal tickets and bottom navigation',
     assert.match(html, /bottomNav\.append\(launcher, historyLauncher, drawerToggle\)/)
     assert.match(html, /group\.lines\.some\(\(line\) => String\(line\.workerCode/)
     assert.match(html, /if \(PERSONAL_WORKER_ID\) activeWorker = workers\[0\] \|\| null/)
-    assert.match(html, /function chooseOpenTicketWorker\(root, selectedCode, onSelect\) \{\s+if \(root\.querySelector\("\[data-open-worker-modal\]"\)\) return;\s+const workers = getWorkers\(true\)/)
+    assert.match(html, /function chooseOpenTicketWorker\(root, selectedCodes, onSelect\) \{\s+if \(root\.querySelector\("\[data-open-worker-modal\]"\)\) return;\s+const workers = getWorkers\(true\)/)
     assert.match(html, /¿Para quién queda abierto\?/)
     assert.match(html, /if \(PERSONAL_WORKER_ID \|\| new URLSearchParams/)
     assert.match(html, /#juan-nav\{position:fixed;left:0;right:0;bottom:0/)
   }
 })
 
+test('serves Juan Pablo 2.0 through the server with shared tickets', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-personal-2-test-'))
+  t.after(() => rm(directory, {recursive: true, force: true}))
+  const {server, url} = await launch(directory)
+  t.after(() => close(server))
+  for (const route of ['/juan-pablo-2.0', '/juan-pablo-2.0.html']) {
+    const response = await fetch(url + route)
+    assert.equal(response.status, 200)
+    const html = await response.text()
+    assert.match(html, /window\.salonTicketStorage =/)
+    assert.match(html, /const PERSONAL_WORKER_ID = "e69d26e7-d3d7-440e-9117-c71e264a1d70"/)
+    assert.match(html, /bottomNav\.append\(launcher, historyLauncher, drawerToggle\)/)
+  }
+})
+
+test('William phone view uses his Auxiliar account and shared tickets', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-william-test-'))
+  t.after(() => rm(directory, {recursive: true, force: true}))
+  const {server, url} = await launch(directory)
+  t.after(() => close(server))
+  for (const route of ['/william', '/william.html']) {
+    const response = await fetch(url + route)
+    assert.equal(response.status, 200)
+    const html = await response.text()
+    assert.match(html, /window\.salonTicketStorage =/)
+    assert.match(html, /const PERSONAL_WORKER_ID = "63421b4b-e733-4199-b45e-b7f0e24a3dbc"/)
+    assert.match(html, /name:"WILLIAM",specialty:"AUXILIAR"/)
+    assert.match(html, /bottomNav\.append\(launcher, historyLauncher, drawerToggle\)/)
+  }
+})
+
 test('Tickets tab asks for a customer name only for a blank new ticket', async () => {
-  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
     const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
     const start = html.indexOf('    const showTickets = () => {')
     const end = html.indexOf('    launcher.addEventListener("click", showTickets);', start)
@@ -242,7 +275,7 @@ test('finalized history groups tickets by their closing date', async () => {
   const today = new Date('2026-11-20T05:00:00Z')
   const yesterday = new Date(today.getTime() - 1)
   const dateKey = date => date === today ? '2026-11-20' : '2026-11-19'
-  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0']) {
     const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
     const start = html.indexOf('      const finalizedGroups = historyGroups.filter(isFinalized);')
     const end = html.indexOf('      const workerColumns =', start)
@@ -251,19 +284,22 @@ test('finalized history groups tickets by their closing date', async () => {
       historyGroups: [
         {id: 'closed-today', lines: [{ticketStatus: 'finalized', closedAt: today.toISOString(), localDate: dateKey(yesterday)}]},
         {id: 'closed-yesterday', lines: [{ticketStatus: 'finalized', closedAt: yesterday.toISOString(), localDate: dateKey(today)}]},
+        {id: 'entered-today', lines: [{ticketStatus: 'finalized', closedAt: today.toISOString(), enteredAt: today.toISOString()}]},
         {id: 'still-open', lines: [{ticketStatus: 'open', localDate: dateKey(today)}]}
       ],
       isFinalized: group => group.lines.every(line => line.ticketStatus !== 'open'),
+      isEntered: line => Boolean(line.enteredAt),
       root: {dataset: {}},
       Date: class extends Date {constructor(...args) {super(...(args.length ? args : [today.getTime()]))}},
       historyList: groups => groups.map(group => group.id).join(','),
-      showFinalizedTickets: true, TICKET_WORKER_SPECIALTY: true
+      showPendingTickets: true, showExportedTickets: true
     }
     const calendar = html.slice(html.indexOf('    const salonCalendar ='), html.indexOf('    const ticketId ='))
-    runInNewContext(calendar + html.slice(start, end) + '\nglobalThis.todayGroups = finalizedTodayGroups; globalThis.olderGroups = finalizedOlderGroups; globalThis.markup = historyMarkup;', context)
-    assert.deepEqual(Array.from(context.todayGroups, group => group.id), ['closed-today'], view)
-    assert.deepEqual(Array.from(context.olderGroups, group => group.id), ['closed-yesterday'], view)
-    assert.match(context.markup, /Hoy/)
+    runInNewContext(calendar + html.slice(start, end) + '\nglobalThis.pending = pendingGroups; globalThis.entered = exportedGroups; globalThis.markup = historyMarkup;', context)
+    assert.deepEqual(Array.from(context.pending, group => group.id), ['closed-today', 'closed-yesterday'], view)
+    assert.deepEqual(Array.from(context.entered, group => group.id), ['entered-today'], view)
+    assert.match(context.markup, /Tickets no ingresados[\s\S]*Hoy[\s\S]*closed-today[\s\S]*Anteriores[\s\S]*closed-yesterday/)
+    assert.match(context.markup, /Tickets ingresados[\s\S]*entered-today/)
   }
 })
 
@@ -316,7 +352,7 @@ test('broadcasts each saved ticket activity to connected tablets', async t => {
 })
 
 test('a delayed roster refresh cannot reverse a role change on any ticket view', async () => {
-  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0']) {
     const html = await readFile(path.join(root, 'htmls', view + '.html'), 'utf8')
     const requests = []
     const personalId = 'e69d26e7-d3d7-440e-9117-c71e264a1d70'
@@ -341,7 +377,7 @@ test('a delayed roster refresh cannot reverse a role change on any ticket view',
 })
 
 test('Juan Pablo view filters workers and ticket groups by his ID', async () => {
-  const html = await readFile(path.join(root, 'htmls', 'juan-pablo.html'), 'utf8')
+  const html = await readFile(path.join(root, 'htmls', 'juan-pablo-2.0.html'), 'utf8')
   const workerStart = html.indexOf('    const getWorkers =')
   const workerEnd = html.indexOf('    const saveWorkerOrder =', workerStart)
   const id = 'e69d26e7-d3d7-440e-9117-c71e264a1d70'
@@ -363,6 +399,8 @@ test('Juan Pablo view filters workers and ticket groups by his ID', async () => 
   runInNewContext(html.slice(groupStart, groupEnd) + '\nglobalThis.personalGroupVisible = ticketGroupVisible;', context)
   assert.equal(context.personalGroupVisible({lines: [{workerCode: id.toUpperCase()}]}), true)
   assert.equal(context.personalGroupVisible({lines: [{workerCode: 'OTHER-ID', openAssignedWorkerCode: id.toUpperCase()}]}), true)
+  assert.equal(context.personalGroupVisible({lines: [{workerCode: 'OTHER-ID', openAssignedWorkers: [{code: 'E1'}, {code: id.toUpperCase()}]}]}), true)
+  assert.equal(context.personalGroupVisible({lines: [{workerCode: 'OTHER-ID', openAssignedWorkerCode: id.toUpperCase(), openAssignedWorkers: [{code: 'E1'}]}]}), false)
   assert.equal(context.personalGroupVisible({lines: [{workerCode: 'OTHER-ID'}]}), false)
 })
 
@@ -513,6 +551,65 @@ test('shares open tickets and settings across clients and survives a restart', a
   assert.equal((await deletedGroup.json()).tickets.some(ticket => ticket.ticketGroupId === 'group-1'), false)
 })
 
+test('restores the last valid ticket backup after a damaged data file', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-recovery-test-'))
+  t.after(() => rm(directory, {recursive: true, force: true}))
+  const first = await launch(directory)
+  const makeLine = (id, groupId) => ({id, ticketGroupId: groupId, ticketStatus: 'open', workerName: 'Ana', serviceName: 'MANICURE', customerName: 'Cliente', amount: 20000})
+  const post = async (url, line) => {
+    const response = await fetch(url + '/ticket-state', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({action: 'changes', upsert: [line], deleteIds: [], settings: {}})})
+    assert.equal(response.status, 200)
+  }
+  await post(first.url, makeLine('line-a', 'group-a'))
+  await post(first.url, makeLine('line-b', 'group-b'))
+  assert.equal(JSON.parse(await readFile(path.join(directory, 'tickets.json.bak'), 'utf8')).tickets.length, 1)
+  await close(first.server)
+  await writeFile(path.join(directory, 'tickets.json'), Buffer.alloc(200))
+  const recovered = await launch(directory)
+  t.after(() => close(recovered.server))
+  const snapshot = await (await fetch(recovered.url + '/ticket-state')).json()
+  assert.deepEqual(snapshot.tickets.map(line => line.id), ['line-a'])
+  await post(recovered.url, makeLine('line-c', 'group-c'))
+  assert.deepEqual(JSON.parse(await readFile(path.join(directory, 'tickets.json'), 'utf8')).tickets.map(line => line.id), ['line-a', 'line-c'])
+  assert.equal(JSON.parse(await readFile(path.join(directory, 'tickets.json.bak'), 'utf8')).tickets.length, 1)
+})
+
+test('backs up board, tickets, and settings on startup and on schedule', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-scheduled-backups-'))
+  let server, result
+  try {
+    result = await createSalonServer({dataDirectory: directory, seedPath: path.join(root, 'initial-team.json'), publicDirectory: path.join(root, 'htmls'), backupIntervalMs: 40})
+    server = result.server
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+    const backupsDirectory = path.join(directory, 'backups')
+    const initial = (await readdir(backupsDirectory)).filter(name => !name.startsWith('.tmp-'))
+    assert.equal(initial.length, 1)
+    const firstBoard = JSON.parse(await readFile(path.join(backupsDirectory, initial[0], 'tablero.json'), 'utf8'))
+    const firstTickets = JSON.parse(await readFile(path.join(backupsDirectory, initial[0], 'tickets.json'), 'utf8'))
+    assert.ok(firstBoard.workers.length > 0)
+    assert.deepEqual(firstTickets.tickets, [])
+    assert.ok((await readFile(path.join(backupsDirectory, initial[0], 'source.tar.gz'))).length > 0)
+    const line = {id: 'line-a', ticketGroupId: 'group-a', ticketStatus: 'open', workerName: 'Ana', serviceName: 'MANICURE', customerName: 'Cliente', amount: 20000}
+    const url = `http://127.0.0.1:${server.address().port}`
+    const response = await fetch(url + '/ticket-state', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({action: 'changes', upsert: [line], deleteIds: [], settings: {'salon-custom-services-v1': '["MANICURE"]'}})})
+    assert.equal(response.status, 200)
+    let saved = false
+    for (let attempt = 0; attempt < 40 && !saved; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 40))
+      const names = (await readdir(backupsDirectory)).filter(name => !name.startsWith('.tmp-'))
+      for (const name of names) {
+        const tickets = JSON.parse(await readFile(path.join(backupsDirectory, name, 'tickets.json'), 'utf8'))
+        if (tickets.tickets.some(ticket => ticket.id === line.id) && tickets.settings['salon-custom-services-v1'] === '["MANICURE"]') saved = true
+      }
+    }
+    assert.equal(saved, true)
+  } finally {
+    if (server) await close(server)
+    if (result) await result.backupNow()
+    await rm(directory, {recursive: true, force: true})
+  }
+})
+
 test('concurrent ticket changes keep status and assignment consistent across the group', async t => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-ticket-race-test-'))
   t.after(() => rm(directory, {recursive: true, force: true}))
@@ -526,10 +623,11 @@ test('concurrent ticket changes keep status and assignment consistent across the
   const first = {id: 'line-a', ticketGroupId: 'group-a', ticketStatus: 'open', workerName: 'Paola', serviceName: 'MANICURE', customerName: 'Cliente', amount: 20000, openAssignedWorkerCode: 'E1', openAssignedWorkerName: 'Ana'}
   await post([first])
   await post([{...first, ticketStatus: 'finalized', closedAt: '2026-11-17T10:00:00.000Z'}])
-  const afterStaleOpen = await post([{...first, id: 'line-b', serviceName: 'PEDICURE', ticketStatus: 'open', amount: 30000, openAssignedWorkerCode: 'M1', openAssignedWorkerName: 'Paola'}])
+  const afterStaleOpen = await post([{...first, id: 'line-b', serviceName: 'PEDICURE', ticketStatus: 'open', amount: 30000, openAssignedWorkerCode: 'M1', openAssignedWorkerName: 'Paola', openAssignedWorkers: [{code: 'M1', name: 'Paola', specialty: 'MANICURISTA'}, {code: 'E1', name: 'Ana', specialty: 'ESTILISTA'}]}])
   assert.deepEqual(afterStaleOpen.map(line => line.ticketStatus), ['open', 'open'])
   assert.ok(afterStaleOpen.every(line => line.closedAt === null))
   assert.ok(afterStaleOpen.every(line => line.openAssignedWorkerName === 'Paola'))
+  assert.ok(afterStaleOpen.every(line => line.openAssignedWorkers?.map(worker => worker.name).join(' / ') === 'Paola / Ana'))
   const afterStaleFinalize = await post([{...first, ticketStatus: 'finalized', closedAt: '2026-11-17T11:00:00.000Z'}])
   assert.deepEqual(afterStaleFinalize.map(line => line.ticketStatus), ['finalized', 'finalized'])
   assert.ok(afterStaleFinalize.every(line => line.closedAt === '2026-11-17T11:00:00.000Z'))
@@ -778,7 +876,7 @@ test('Main and Auxiliary history shortcut opens History while the menu Tickets b
     navigationVersion: 0, openTicketId: '', ticketClientName: 'Existing client', requestTicketCustomer: () => {},
     launcher: {addEventListener: (_event, handler) => {click = handler}},
     historyLauncher: {addEventListener: (_event, handler) => {historyClick = handler}},
-    document: {createElement: () => ({setAttribute() {}, addEventListener: (_event, handler) => {floatingClick = handler}}), querySelector: selector => {
+    document: {createElement: () => ({setAttribute() {}, append() {}, addEventListener: (_event, handler) => {floatingClick = handler}}), querySelector: selector => {
       if (selector === '#paper-prices [data-close]') return pricesOpen ? {click: () => {pricesOpen = false}} : null
       if (selector === '#paper-tickets') return ticketsOpen ? existingRoot : null
       return null
@@ -820,6 +918,11 @@ test('ticket shortcut sits between two available cards or below the single avail
     assert.ok(start > 0 && end > start, view)
     const body = {append(button) {button.parentElement = body}}
     const ticketFab = {parentElement: body}
+    const boardTicketActions = {
+      parentElement: null,
+      remove() {this.parentElement = null},
+      prepend(button) {button.parentElement = this}
+    }
     const first = {}
     const second = {}
     const firstName = {parentElement: first, after(button) {button.parentElement = first; button.previousElementSibling = firstName}}
@@ -832,20 +935,22 @@ test('ticket shortcut sits between two available cards or below the single avail
     }
     let overlay = false
     const document = {body, querySelector: selector => selector === '.queue-board .available-panels' ? panels : overlay ? {} : null}
-    runInNewContext(html.slice(start, end) + '\nplaceTicketFab();', {document, ticketFab, TICKET_WORKER_SPECIALTY: view === 'manicuristas' ? 'MANICURISTA' : view === 'estilistas' ? 'ESTILISTA' : null})
-    assert.equal(ticketFab.parentElement, ['main', 'auxiliar'].includes(view) ? panels : view === 'estilistas' ? second : first, view)
-    if (ticketFab.parentElement === panels) assert.equal(ticketFab.nextElementSibling, second, view)
-    else assert.equal(ticketFab.previousElementSibling, view === 'estilistas' ? secondName : firstName, view)
+    runInNewContext(html.slice(start, end) + '\nplaceTicketFab();', {document, ticketFab, boardTicketActions, TICKET_WORKER_SPECIALTY: view === 'manicuristas' ? 'MANICURISTA' : view === 'estilistas' ? 'ESTILISTA' : null})
+    assert.equal(ticketFab.parentElement, boardTicketActions, view)
+    assert.equal(boardTicketActions.parentElement, ['main', 'auxiliar'].includes(view) ? panels : view === 'estilistas' ? second : first, view)
+    if (boardTicketActions.parentElement === panels) assert.equal(boardTicketActions.nextElementSibling, second, view)
+    else assert.equal(boardTicketActions.previousElementSibling, view === 'estilistas' ? secondName : firstName, view)
     overlay = true
-    runInNewContext(html.slice(start, end) + '\nplaceTicketFab();', {document, ticketFab, TICKET_WORKER_SPECIALTY: null})
+    runInNewContext(html.slice(start, end) + '\nplaceTicketFab();', {document, ticketFab, boardTicketActions, TICKET_WORKER_SPECIALTY: null})
     assert.equal(ticketFab.parentElement, body, view)
+    assert.equal(boardTicketActions.parentElement, null, view)
   }
 })
 
 test('leaving a ticket open clears the customer and lines but keeps the selected worker', async () => {
   for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
     const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
-    const start = html.indexOf('      const save = async (keepOpen, selectedOpenWorker = null) => {')
+    const start = html.indexOf('      const save = async (keepOpen, selectedOpenWorkers = []) => {')
     const end = html.indexOf('      content.querySelector(\'[data-action="save-open"]\')', start)
     assert.ok(start > 0 && end > start, view)
     let stored = null
@@ -869,11 +974,12 @@ test('leaving a ticket open clears the customer and lines but keeps the selected
       alert: message => {throw new Error(message)}, ticketSaveInFlight: false, ticketDrafts: new Map()
     }
     runInNewContext(html.slice(start, end) + '\nglobalThis.saveTicket = save;', context)
-    const saving = context.saveTicket(true, {code: 'E2', name: 'María', specialty: 'ESTILISTA'})
+    const saving = context.saveTicket(true, [{code: 'E2', name: 'María', specialty: 'ESTILISTA'}, {code: 'M2', name: 'Dayana', specialty: 'MANICURISTA'}])
     assert.equal(stored?.[0]?.ticketStatus, 'open', view)
     assert.equal(stored?.[0]?.customerName, 'Cliente nuevo', view)
     assert.equal(stored?.[0]?.openAssignedWorkerCode, 'E2', view)
     assert.equal(stored?.[0]?.openAssignedWorkerName, 'María', view)
+    assert.deepEqual(Array.from(stored?.[0]?.openAssignedWorkers || [], worker => worker.name), ['María', 'Dayana'], view)
     assert.equal(context.ticketClientName, 'Cliente nuevo', view)
     assert.equal(context.pendingTicketLines.length, 1, view)
     assert.equal(saveButton.disabled, true, view)
@@ -892,7 +998,7 @@ test('leaving a ticket open clears the customer and lines but keeps the selected
     context.getTickets = () => [firstLine]
     context.ticketId = () => 'additional-line'
     context.pendingTicketLines = [{workerCode: worker.code, workerName: worker.name, workerSpecialty: worker.specialty, serviceName: worker.specialty === 'AUXILIAR' ? 'CEPILLADO' : 'PEDICURE', amount: 30000, supplies: []}]
-    const savingAgain = context.saveTicket(true, {code: 'M2', name: 'Dayana', specialty: 'MANICURISTA'})
+    const savingAgain = context.saveTicket(true, [{code: 'M2', name: 'Dayana', specialty: 'MANICURISTA'}])
     assert.equal(stored.length, 2, view)
     assert.ok(stored.every(line => line.openAssignedWorkerCode === 'M2' && line.openAssignedWorkerName === 'Dayana'), view)
     confirmSave(true)
@@ -901,7 +1007,7 @@ test('leaving a ticket open clears the customer and lines but keeps the selected
     context.activeGroup = {...context.activeGroup, lines: existingLines}
     context.getTickets = () => existingLines
     context.pendingTicketLines = []
-    const reassigning = context.saveTicket(true, {code: 'E1', name: 'Ana', specialty: 'ESTILISTA'})
+    const reassigning = context.saveTicket(true, [{code: 'E1', name: 'Ana', specialty: 'ESTILISTA'}])
     assert.equal(stored.length, 2, view)
     assert.ok(stored.every(line => line.openAssignedWorkerCode === 'E1' && line.openAssignedWorkerName === 'Ana'), view)
     confirmSave(true)
@@ -910,7 +1016,7 @@ test('leaving a ticket open clears the customer and lines but keeps the selected
     let warning = ''
     context.alert = message => {warning = message}
     context.getTickets = () => accepted.map(line => ({...line, ticketStatus: 'finalized'}))
-    await context.saveTicket(true, worker)
+    await context.saveTicket(true, [worker])
     assert.match(warning, /cambió en otra pantalla/, view)
     assert.equal(stored, accepted, view)
   }
@@ -936,7 +1042,7 @@ test('reopening a cross-specialty ticket selects its assigned worker on the rece
       pendingTicketLines: [{serviceName: 'MANICURE', amount: 5000}], ticketDrafts: new Map(),
       selectedTicketService: '', selectedTicketServices: new Map(), selectedTicketSupplies: new Map(),
       selectedProductName: '', overriddenPrices: new Set(), ticketAmount: '', editingPendingIndex: -1,
-      root: {scrollTop: 10}, renderTickets: () => {rendered = true}
+      root: {scrollTop: 10}, renderTickets: () => {rendered = true}, openAssignees: lines => [{code: lines[0]?.openAssignedWorkerCode}]
     }
     runInNewContext(html.slice(switchStart, switchEnd) + html.slice(openStart, openEnd) + '\nglobalThis.openTicket = openSelectedTicket; globalThis.switchDraft = switchTicketDraft;', context)
     context.openTicket()
@@ -959,7 +1065,7 @@ test('reopening a cross-specialty ticket selects its assigned worker on the rece
 
 test('a rejected open-ticket save leaves the form ready to retry', async () => {
   const html = await readFile(path.join(root, 'htmls', 'main.html'), 'utf8')
-  const start = html.indexOf('      const save = async (keepOpen, selectedOpenWorker = null) => {')
+  const start = html.indexOf('      const save = async (keepOpen, selectedOpenWorkers = []) => {')
   const end = html.indexOf('      content.querySelector(\'[data-action="save-open"]\')', start)
   let rendered = false
   const button = {disabled: false}
@@ -973,7 +1079,7 @@ test('a rejected open-ticket save leaves the form ready to retry', async () => {
     renderTickets: () => {rendered = true}, root: {}, content: {querySelector: () => button}, alert: message => {throw Error(message)}, ticketSaveInFlight: false
   }
   runInNewContext(html.slice(start, end) + '\nglobalThis.saveTicket = save;', context)
-  await context.saveTicket(true, {code: 'E2', name: 'María', specialty: 'ESTILISTA'})
+  await context.saveTicket(true, [{code: 'E2', name: 'María', specialty: 'ESTILISTA'}])
   assert.equal(context.ticketClientName, 'Cliente nuevo')
   assert.equal(context.pendingTicketLines.length, 1)
   assert.equal(context.activeWorker.name, 'Ana')
@@ -1159,7 +1265,7 @@ test('selecting a service adds a ticket line and marks missing prices for direct
 })
 
 test('every ticket view asks for a customer name when starting a new ticket', async () => {
-  for (const name of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo']) {
+  for (const name of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
     const html = await readFile(path.join(root, 'htmls', `${name}.html`), 'utf8')
     assert.match(html, /function requestTicketCustomer\(root, onReady\)/)
     assert.match(html, /data-ticket-customer-modal/)
@@ -1346,7 +1452,7 @@ test('ticket controls scroll away with the ticket content', async () => {
 })
 
 test('rapid ticket and history taps create only the most recently requested screen', async () => {
-  for (const name of ['main', 'auxiliar', 'estilistas', 'manicuristas', 'juan-pablo']) {
+  for (const name of ['main', 'auxiliar', 'estilistas', 'manicuristas', 'juan-pablo-2.0']) {
     const html = await readFile(path.join(root, 'htmls', name + '.html'), 'utf8')
     const start = html.indexOf('    async function openTickets(')
     const end = html.indexOf('\n    }', start) + 6

@@ -261,7 +261,14 @@ Error generating stack: `+g.message+`
       if (nameMatches.length === 1) return nameMatches[0].specialty;
       return getAllServices().includes(line.serviceName) ? serviceSpecialty(line.serviceName) : null;
     };
-    const ticketGroupVisible = (group) => !PERSONAL_WORKER_ID || group.lines.some((line) => String(line.workerCode || "").toUpperCase() === PERSONAL_WORKER_CODE || String(line.openAssignedWorkerCode || "").toUpperCase() === PERSONAL_WORKER_CODE);
+    const ticketGroupVisible = (group) => !PERSONAL_WORKER_ID || group.lines.some((line) => String(line.workerCode || "").toUpperCase() === PERSONAL_WORKER_CODE || (Array.isArray(line.openAssignedWorkers) && line.openAssignedWorkers.length ? line.openAssignedWorkers.some((worker) => String(worker.code || "").toUpperCase() === PERSONAL_WORKER_CODE) : String(line.openAssignedWorkerCode || "").toUpperCase() === PERSONAL_WORKER_CODE));
+    const openAssignees = (lines) => {
+      const assigned = lines.find((line) => Array.isArray(line.openAssignedWorkers) && line.openAssignedWorkers.length)?.openAssignedWorkers;
+      if (assigned) return assigned;
+      const legacy = lines.find((line) => line.openAssignedWorkerCode || line.openAssignedWorkerName);
+      return legacy ? [{ code: legacy.openAssignedWorkerCode, name: legacy.openAssignedWorkerName, specialty: legacy.openAssignedWorkerSpecialty }] : [];
+    };
+    const openAssigneeNames = (lines, workers) => openAssignees(lines).map((assignee) => workers.find((worker) => worker.code === assignee.code)?.name || assignee.name).filter(Boolean).join(" / ") || "Sin asignar";
     function refreshTicketView(root) {
       if (!root?.isConnected) return;
       const focused = document.activeElement;
@@ -324,7 +331,8 @@ Error generating stack: `+g.message+`
       return next;
     };
     let activeWorker = null;
-    let showFinalizedTickets = true;
+    let showPendingTickets = true;
+    let showExportedTickets = true;
     let showOpenHistoryTickets = true;
     let openTicketId = "";
     let selectedTicketService = "";
@@ -518,7 +526,13 @@ Error generating stack: `+g.message+`
       .available-panels:has(> #paper-ticket-fab){grid-template-rows:minmax(0,1fr) auto minmax(0,1fr)}.available-panels > #paper-ticket-fab,.current-person > #paper-ticket-fab{position:relative;left:auto;bottom:auto;transform:none;z-index:1;justify-self:center;align-self:center;min-width:150px}.current-person > #paper-ticket-fab{margin-top:8px}
       .salon-app .appearance-panel .idle-board-setting{display:grid;gap:8px;margin:16px 0 0;padding:14px 0 0;border-top:1px solid var(--line);font-size:12px;font-weight:700}.salon-app .appearance-panel .idle-board-setting select{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--canvas);color:var(--text);font:600 14px Inter,Segoe UI,Arial,sans-serif}
       #paper-tickets .pt-ticket-lines .pt-unpriced-line{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;align-items:stretch;padding:8px 0}#paper-tickets .pt-unpriced-line .pt-line-actions{display:flex;align-items:end;justify-content:space-between;gap:8px}#paper-tickets .pt-unpriced-line .pt-pending-price-label{display:flex;flex-direction:column;gap:4px;flex:1;max-width:150px;min-width:0;margin:0;font-size:12px;font-weight:700}#paper-tickets .pt-unpriced-line .pt-pending-price-label input{width:100%;min-width:0;min-height:42px;padding:7px 9px;font-size:16px}#paper-tickets .pt-unpriced-line .pt-line-actions button{min-height:42px}#paper-tickets .pt-unpriced-line small{display:flex;flex-wrap:wrap;align-items:center;gap:5px;line-height:1.3}#paper-tickets .pt-unpriced-line .pt-pending-label{margin-left:0}
-      #paper-tickets .pt-open-assignee{margin:0 0 7px;padding:7px 11px;border-radius:9px;background:var(--tint);color:var(--accent);font-size:15px;font-weight:700;overflow-wrap:anywhere}
+      #paper-tickets .pt-open-assignee{display:flex;align-items:center;gap:5px;margin:0 0 7px;padding:7px 11px;border-radius:9px;background:var(--tint);color:var(--accent);font-size:15px;font-weight:700}
+      #paper-tickets .pt-open-assignee-label{flex:none}
+      #paper-tickets .pt-open-assignee-window{display:block;flex:1;min-width:0;overflow:hidden;white-space:nowrap}
+      #paper-tickets .pt-open-assignee-text{display:inline-block;white-space:nowrap}
+      #paper-tickets .pt-open-assignee-window.is-scrolling .pt-open-assignee-text{padding-left:100%;animation:pt-open-assignee-scroll 14s linear infinite}
+      @keyframes pt-open-assignee-scroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+      @media(prefers-reduced-motion:reduce){#paper-tickets .pt-open-assignee-window.is-scrolling{overflow-x:auto}#paper-tickets .pt-open-assignee-window.is-scrolling .pt-open-assignee-text{padding-left:0;animation:none}}
       #paper-tickets .pt-open-worker-modal{width:min(620px,100%);max-height:calc(100vh - 32px);overflow:auto}
       #paper-tickets .pt-open-worker-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
       #paper-tickets .pt-open-worker-column{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px}
@@ -1191,38 +1205,38 @@ Error generating stack: `+g.message+`
       const salon = document.querySelector(".salon-app");
       const appearanceObserver = salon ? new MutationObserver(() => syncTicketAppearance(root)) : null;
       appearanceObserver?.observe(salon, { attributes: true, attributeFilter: ["class", "data-palette"] });
-      root.querySelector('[data-pt="back"]').addEventListener("click", () => { appearanceObserver?.disconnect(); if (scrollFrame) cancelAnimationFrame(scrollFrame); for (const control of ticketControls()) control.style.removeProperty("transform"); document.body.classList.remove("ticket-controls-hidden"); if (root.workerRefreshTimer) clearInterval(root.workerRefreshTimer); root.remove(); syncPageScrollLock(); if (window.parent !== window && new URLSearchParams(location.search).has("source")) window.parent.postMessage("salon-close-tickets", "*"); });
+      root.querySelector('[data-pt="back"]').addEventListener("click", () => { appearanceObserver?.disconnect(); if (scrollFrame) cancelAnimationFrame(scrollFrame); for (const control of ticketControls()) control.style.removeProperty("transform"); document.body.classList.remove("ticket-controls-hidden"); if (root.workerRefreshTimer) clearInterval(root.workerRefreshTimer); root.openAssigneeObserver?.disconnect(); root.remove(); syncPageScrollLock(); if (window.parent !== window && new URLSearchParams(location.search).has("source")) window.parent.postMessage("salon-close-tickets", "*"); });
       return root;
     }
 
-    function chooseOpenTicketWorker(root, selectedCode, onSelect) {
+    function chooseOpenTicketWorker(root, selectedCodes, onSelect) {
       if (root.querySelector("[data-open-worker-modal]")) return;
       const workers = getWorkers(true);
       const modal = document.createElement("div");
       modal.className = "pt-modal-backdrop";
       modal.dataset.openWorkerModal = "";
       const columns = [["ESTILISTA", "Estilistas"], ["MANICURISTA", "Manicuristas"], ["AUXILIAR", "Auxiliares"]].map(([specialty, title]) => `<section class="pt-open-worker-column"><h3>${title}</h3>${workers.filter((worker) => worker.specialty === specialty).map((worker) => `<button type="button" class="pt-open-worker-choice" data-open-worker-code="${esc(worker.code)}">${esc(worker.name)}</button>`).join("") || `<p class="pt-empty">Sin personas disponibles.</p>`}</section>`).join("");
-      modal.innerHTML = `<div class="pt-modal pt-open-worker-modal" role="dialog" aria-modal="true" aria-labelledby="pt-open-worker-title"><div class="pt-modal-head"><h2 id="pt-open-worker-title">¿Para quién queda abierto?</h2><button type="button" data-open-worker-cancel aria-label="Cerrar">×</button></div><div class="pt-open-worker-columns">${columns}</div><div class="pt-modal-actions"><button type="button" data-open-worker-cancel>Cancelar</button><button type="button" class="primary" data-open-worker-confirm disabled>Dejar ticket abierto</button></div></div>`;
-      let chosenCode = workers.some((worker) => worker.code === selectedCode) ? selectedCode : "";
+      modal.innerHTML = `<div class="pt-modal pt-open-worker-modal" role="dialog" aria-modal="true" aria-labelledby="pt-open-worker-title"><div class="pt-modal-head"><h2 id="pt-open-worker-title">¿Para quién queda abierto?</h2><button type="button" data-open-worker-cancel aria-label="Cerrar">×</button></div><p>Selecciona una o varias personas.</p><div class="pt-open-worker-columns">${columns}</div><div class="pt-modal-actions"><button type="button" data-open-worker-cancel>Cancelar</button><button type="button" class="primary" data-open-worker-confirm disabled>Dejar ticket abierto</button></div></div>`;
+      const chosenCodes = new Set((Array.isArray(selectedCodes) ? selectedCodes : [selectedCodes]).filter((code) => workers.some((worker) => worker.code === code)));
       const confirm = modal.querySelector("[data-open-worker-confirm]");
       const refresh = () => {
         modal.querySelectorAll("[data-open-worker-code]").forEach((button) => {
-          const selected = button.dataset.openWorkerCode === chosenCode;
+          const selected = chosenCodes.has(button.dataset.openWorkerCode);
           button.classList.toggle("selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
-        confirm.disabled = !chosenCode;
+        confirm.disabled = !chosenCodes.size;
       };
       const close = () => modal.remove();
       modal.querySelectorAll("[data-open-worker-cancel]").forEach((button) => button.addEventListener("click", close));
       modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
       modal.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
-      modal.querySelectorAll("[data-open-worker-code]").forEach((button) => button.addEventListener("click", () => { chosenCode = button.dataset.openWorkerCode; refresh(); }));
+      modal.querySelectorAll("[data-open-worker-code]").forEach((button) => button.addEventListener("click", () => { if (chosenCodes.has(button.dataset.openWorkerCode)) chosenCodes.delete(button.dataset.openWorkerCode); else chosenCodes.add(button.dataset.openWorkerCode); refresh(); }));
       confirm.addEventListener("click", () => {
-        const worker = workers.find((entry) => entry.code === chosenCode);
-        if (!worker) return;
+        const selected = workers.filter((worker) => chosenCodes.has(worker.code));
+        if (!selected.length) return;
         close();
-        onSelect(worker);
+        onSelect(selected);
       });
       root.append(modal);
       refresh();
@@ -1344,6 +1358,7 @@ Error generating stack: `+g.message+`
     }
 
     function renderTickets(root) {
+      if (ticketWorkspace === "history") root.querySelector("[data-ticket-customer-modal]")?.remove();
       root.pendingTicketRefresh = false;
       root.dataset.view = ticketWorkspace;
       const content = root.querySelector("[data-pt-content]");
@@ -1411,12 +1426,16 @@ Error generating stack: `+g.message+`
         return `<li class="pt-history-ticket"><article class="pt-receipt${finalized ? " pt-reopenable" : ""}" data-ticket-group="${esc(group.id)}" tabindex="0" aria-label="Ticket #${esc(group.ticketNumber)}. ${finalized ? "Toca para reabrir. " : ""}Mantén presionado para borrar." ${finalized ? `data-reopen-ticket="${esc(group.id)}"` : ""}><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-history-payment" role="radiogroup" aria-label="Forma de pago del ticket #${esc(group.ticketNumber)}">${paymentOptions}</div><div class="pt-receipt-foot"><span class="pt-receipt-status">${finalized ? "Finalizado" : "Abierto"}</span><div class="pt-receipt-check">${checkbox}</div></div></article></li>`;
       }).join("")}</ul>` : `<p class="pt-empty">${emptyMessage}</p>`;
       const finalizedGroups = historyGroups.filter(isFinalized);
+      const pendingGroups = finalizedGroups.filter((group) => !group.lines.every(isEntered));
+      const exportedGroups = finalizedGroups.filter((group) => group.lines.every(isEntered));
       const today = localDate();
       root.dataset.historyDate = today;
-      const finalizedTodayGroups = finalizedGroups.filter(group => receiptDate(group) === today);
-      const finalizedOlderGroups = finalizedGroups.filter((group) => !finalizedTodayGroups.includes(group));
-      const finalizedDayMarkup = `<div class="pt-history-day"><h3>Hoy <span>${finalizedTodayGroups.length}</span></h3>${historyList(finalizedTodayGroups, "No hay tickets finalizados hoy.")}</div>${finalizedOlderGroups.length ? `<div class="pt-history-day"><h3>Anteriores <span>${finalizedOlderGroups.length}</span></h3>${historyList(finalizedOlderGroups, "No hay tickets anteriores.")}</div>` : ""}`;
-      const historyMarkup = `<details class="pt-history-section" data-history="finalized" ${showFinalizedTickets ? "open" : ""}><summary>Tickets finalizados <span>${finalizedGroups.length}</span></summary>${finalizedDayMarkup}</details>`;
+      const historyDayMarkup = (groups, emptyToday, emptyOlder) => {
+        const todayGroups = groups.filter((group) => receiptDate(group) === today);
+        const olderGroups = groups.filter((group) => receiptDate(group) !== today);
+        return `<div class="pt-history-day"><h3>Hoy <span>${todayGroups.length}</span></h3>${historyList(todayGroups, emptyToday)}</div>${olderGroups.length ? `<div class="pt-history-day"><h3>Anteriores <span>${olderGroups.length}</span></h3>${historyList(olderGroups, emptyOlder)}</div>` : ""}`;
+      };
+      const historyMarkup = `<details class="pt-history-section" data-history="pending" ${showPendingTickets ? "open" : ""}><summary>Tickets no ingresados <span>${pendingGroups.length}</span></summary>${historyDayMarkup(pendingGroups, "No hay tickets sin ingresar hoy.", "No hay tickets anteriores sin ingresar.")}</details><details class="pt-history-section" data-history="exported" ${showExportedTickets ? "open" : ""}><summary>Tickets ingresados <span>${exportedGroups.length}</span></summary>${historyDayMarkup(exportedGroups, "No hay tickets ingresados hoy.", "No hay tickets ingresados anteriores.")}</details>`;
       const workerColumns = [["MANICURISTA", "Manicuristas"], ["ESTILISTA", "Estilistas"], ["AUXILIAR", "Auxiliares"]].filter(([specialty]) => !TICKET_WORKER_SPECIALTY || specialty === TICKET_WORKER_SPECIALTY || TICKET_WORKER_SPECIALTY === "ESTILISTA" && specialty === "AUXILIAR").map(([specialty, title]) => `<section class="pt-worker-column"><h3>${title}</h3>${workers.filter((worker) => worker.specialty === specialty).map((worker) => `<button type="button" class="pt-worker-choice ${activeWorker?.code === worker.code ? "selected" : ""}" data-worker="${esc(worker.code)}"><strong>${esc(worker.name)}</strong><small>${worker.specialty === "MANICURISTA" ? "Manicurista" : worker.specialty === "AUXILIAR" ? "Auxiliar" : "Estilista"}</small></button>`).join("") || `<p class="pt-empty">Sin personas disponibles.</p>`}</section>`).join("");
       const services = servicesForSpecialty(activeWorker?.specialty).map((name) => `<button class="pt-service ${name === service ? "selected" : ""}" type="button" data-service="${esc(name)}"><strong>${esc(name)}</strong></button>`).join("");
       const openList = openGroups.length ? `<ul class="pt-receipt-strip" aria-label="Tickets abiertos; desliza horizontalmente">${openGroups.map((group) => {
@@ -1424,10 +1443,9 @@ Error generating stack: `+g.message+`
         const dateValue = String(group.lines[0]?.localDate || group.lines[0]?.createdAt || "").slice(0, 10);
         const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
         const shortDate = dateMatch ? `${dateMatch[3]}/${dateMatch[2]}` : "—";
-        const assignedLine = group.lines.find((line) => line.openAssignedWorkerCode || line.openAssignedWorkerName);
-        const assigneeName = allWorkers.find((worker) => worker.code === assignedLine?.openAssignedWorkerCode)?.name || assignedLine?.openAssignedWorkerName || "Sin asignar";
+        const assigneeName = openAssigneeNames(group.lines, allWorkers);
         const serviceRows = group.lines.map((line) => `<div class="pt-history-service-card"><span class="pt-line-info"><strong>${esc(line.serviceName === "PRODUCTO" && line.productName ? line.productName : line.serviceName)}</strong><small>${line.serviceName === "PRODUCTO" ? "PRODUCTO · " : ""}${esc(line.workerName)}${usageText(line.supplies) ? ` · ${esc(usageText(line.supplies))}` : ""}</small></span><span class="pt-line-price">${money(line.amount)}</span></div>`).join("");
-        return `<li class="pt-history-ticket"><div class="pt-open-assignee">Para: <strong>${esc(assigneeName)}</strong></div><article class="pt-receipt pt-open-receipt" role="button" tabindex="0" data-open="${esc(group.id)}" data-ticket-group="${esc(group.id)}" aria-label="Continuar ticket #${esc(group.ticketNumber)} de ${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}. Mantén presionado para borrar."><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-receipt-foot"><span class="pt-receipt-status">Abierto</span><span class="pt-open-continue">Continuar →</span></div></article></li>`;
+        return `<li class="pt-history-ticket"><div class="pt-open-assignee" title="Para: ${esc(assigneeName)}"><span class="pt-open-assignee-label">Para:</span><span class="pt-open-assignee-window"><strong class="pt-open-assignee-text">${esc(assigneeName)}</strong></span></div><article class="pt-receipt pt-open-receipt" role="button" tabindex="0" data-open="${esc(group.id)}" data-ticket-group="${esc(group.id)}" aria-label="Continuar ticket #${esc(group.ticketNumber)} de ${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}. Mantén presionado para borrar."><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-receipt-foot"><span class="pt-receipt-status">Abierto</span><span class="pt-open-continue">Continuar →</span></div></article></li>`;
       }).join("")}</ul>` : `<p class="pt-empty">No hay tickets abiertos.</p>`;
       const historyOpenMarkup = `<details class="pt-history-section" data-history="open" ${showOpenHistoryTickets ? "open" : ""}><summary>Tickets abiertos <span>${openGroups.length}</span></summary>${openList}</details>`;
       content.innerHTML = `<section class="pt-client"><div class="pt-client-fields"><label><span class="pt-client-title">Cliente</span><input data-client="name" type="text" enterkeyhint="done" maxlength="80" value="${esc(customerName)}" ${activeGroup ? "readonly" : ""} placeholder="Nombre y apellido"></label></div></section>${ticketScreen === "open" ? `<section class="pt-open"><h2>Tickets abiertos</h2>${openList}</section>` : ""}<section class="pt-workbench"><aside class="pt-pane"><div class="pt-pane-head"><h2>Quién atendió</h2></div><div class="pt-worker-columns">${workerColumns}</div></aside><dialog class="pt-pane pt-services ${activeWorker ? "ready" : ""}"><div class="pt-pane-head"><h2>Servicios</h2><span>${activeWorker ? `${esc(activeWorker.name)} · Mantén presionado para ordenar` : "Selecciona al trabajador"}</span></div><div class="pt-grid">${services}</div></dialog><aside class="pt-pane pt-value"><h2>Valor</h2>${service ? `<strong>${esc(service)}</strong><div class="pt-value-input"><label>Precio cobrado<input data-amount data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(ticketAmount)}"></label><button class="pt-check" type="button" data-action="add-line" aria-label="Agregar servicio al ticket" title="Agregar servicio al ticket">✓</button></div>` : `<p>Selecciona un servicio.</p>`}${ticketLines.length ? `<div class="pt-ticket-lines"><h3 hidden>Servicios del ticket</h3>${ticketLines.map((line, index) => line.pending && line.serviceName === "PRODUCTO" ? `<div class="pt-product-line"><label>PRODUCTO<input data-pending-product-name="${index - persistedLines.length}" type="text" maxlength="80" enterkeyhint="done" autocomplete="off" placeholder="Nombre del producto" value="${esc(line.productName || "")}"></label><label>Precio<input data-pending-product-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.productPriceEntered ? formatPrice(line.amount) : ""}"></label><button class="pt-product-delete danger" type="button" data-delete-pending="${index - persistedLines.length}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button><small>${esc(line.workerName)} · Sin guardar</small></div>` : line.pending && line.needsPrice ? `<div class="pt-unpriced-line"><span>${esc(line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}<em class="pt-pending-label">Sin guardar</em></small></span><span class="pt-line-actions"><label class="pt-pending-price-label">Precio<input data-pending-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.priceEntered ? formatPrice(line.amount) : ""}"></label><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button></span></div>` : `<div><span>${esc(line.serviceName === "PRODUCTO" && line.productName ? `PRODUCTO · ${line.productName}` : line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}${line.pending ? `<em class="pt-pending-label">Sin guardar</em>` : ""}</small></span><strong>${money(line.amount)}</strong><span class="pt-line-actions">${line.pending ? `<button type="button" data-edit-pending="${index - persistedLines.length}">Editar</button><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button>` : line.serviceName === "PRODUCTO" ? `<button class="pt-product-delete danger" type="button" data-delete-ticket="${esc(line.id)}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button>` : `<button type="button" data-edit-ticket="${esc(line.id)}">Editar</button><button class="danger" type="button" data-delete-ticket="${esc(line.id)}">Eliminar</button>`}</span></div>`).join("")}</div>` : ""}<div class="pt-total"><span>Total del ticket</span><strong data-ticket-total>${money(ticketTotal)}</strong></div></aside></section><section class="pt-ticket-actions"><nav class="pt-tabs"><button type="button" class="${ticketScreen === "new" ? "selected" : ""}" data-action="new">Nuevo ticket</button><button type="button" class="${ticketScreen === "open" ? "selected" : ""}" data-action="open-list">Tickets abiertos <span>${openGroups.length}</span></button></nav><button type="button" data-action="save-open">Dejar ticket abierto</button><button type="button" class="primary" data-action="finalize">Finalizar</button></section><section class="pt-recent pt-history"><h2>Historial de tickets</h2>${historyOpenMarkup}${historyMarkup}</section>`;
@@ -1504,8 +1522,17 @@ Error generating stack: `+g.message+`
       });
       content.querySelector(".pt-history").insertAdjacentHTML("beforebegin", `<section class="pt-open pt-open-home"><div class="pt-open-home-head"><h2>Tickets abiertos</h2><span>${openGroups.length}</span></div>${openList}</section>`);
       content.querySelector(".pt-client-fields").insertAdjacentHTML("beforebegin", `<header class="jp-heading"><span>Juan Pablo</span><h1>Ticket #${activeGroup?.ticketNumber ?? nextTicketNumber(allTickets)}</h1></header>`);
+      root.openAssigneeObserver?.disconnect();
+      root.openAssigneeObserver = new ResizeObserver(() => {
+        content.querySelectorAll(".pt-open-assignee-window").forEach((viewport) => {
+          if (!viewport.clientWidth) return;
+          viewport.classList.remove("is-scrolling");
+          viewport.classList.toggle("is-scrolling", viewport.querySelector(".pt-open-assignee-text").scrollWidth > viewport.clientWidth + 1);
+        });
+      });
+      content.querySelectorAll(".pt-open-assignee-window").forEach((viewport) => root.openAssigneeObserver.observe(viewport));
       content.querySelectorAll("[data-history]").forEach((section) => { const list = section.querySelector("ul.pt-receipt-strip"); if (list) list.scrollLeft = historyScroll[section.dataset.history] || 0; });
-      content.querySelectorAll("[data-history]").forEach((section) => section.addEventListener("toggle", () => { if (section.dataset.history === "open") showOpenHistoryTickets = section.open; else showFinalizedTickets = section.open; }));
+      content.querySelectorAll("[data-history]").forEach((section) => section.addEventListener("toggle", () => { if (section.dataset.history === "open") showOpenHistoryTickets = section.open; else if (section.dataset.history === "pending") showPendingTickets = section.open; else if (section.dataset.history === "exported") showExportedTickets = section.open; }));
       content.querySelectorAll("[data-payment-group]").forEach((radio) => radio.addEventListener("change", () => {
         const id = radio.dataset.paymentGroup;
         const tickets = getTickets();
@@ -1514,18 +1541,25 @@ Error generating stack: `+g.message+`
       }));
       content.querySelectorAll("[data-ticket-entered]").forEach((checkbox) => checkbox.addEventListener("change", () => {
         const id = checkbox.dataset.ticketEntered;
-        const applyEnteredChange = () => {
+        const shouldEnter = checkbox.checked;
+        const applyEnteredChange = async () => {
           const tickets = getTickets();
           const group = tickets.filter((line) => (line.ticketGroupId || line.id) === id);
           if (!group.length || group.some((line) => line.ticketStatus === "open")) { renderTickets(root); return; }
-          const enteredAt = checkbox.checked ? new Date().toISOString() : null;
-          try { saveTickets(tickets.map((line) => (line.ticketGroupId || line.id) === id ? { ...line, enteredAt } : line)); }
-          catch { alert("No se pudo actualizar el ticket en este navegador."); renderTickets(root); return; }
-          if (TICKET_WORKER_SPECIALTY) showFinalizedTickets = true;
-          else showFinalizedTickets = true;
-          renderTickets(root);
+          checkbox.disabled = true;
+          const enteredAt = shouldEnter ? new Date().toISOString() : null;
+          try {
+            const saved = await saveTickets(tickets.map((line) => (line.ticketGroupId || line.id) === id ? { ...line, enteredAt } : line));
+            if (!saved) throw new Error("No se confirmó el cambio.");
+            if (shouldEnter) showExportedTickets = true;
+            else showPendingTickets = true;
+            renderTickets(root);
+          } catch {
+            alert("No se pudo actualizar el ticket. Inténtalo de nuevo.");
+            renderTickets(root);
+          }
         };
-        if (checkbox.checked) showStyledConfirm(root, { title: "¿Marcar ticket como ingresado?", message: "El ticket se moverá a la sección de tickets ingresados.", confirmText: "Sí, continuar", onConfirm: applyEnteredChange, onCancel: () => { checkbox.checked = false; } });
+        if (shouldEnter) showStyledConfirm(root, { title: "¿Marcar ticket como ingresado?", message: "El ticket se moverá a Tickets ingresados.", confirmText: "Sí, continuar", onConfirm: applyEnteredChange, onCancel: () => { checkbox.checked = false; } });
         else applyEnteredChange();
       }));
       content.querySelectorAll("[data-ticket-group]").forEach((card) => {
@@ -1705,7 +1739,7 @@ Error generating stack: `+g.message+`
         const openSelectedTicket = () => {
           if (!switchTicketDraft(button.dataset.open)) return;
           const group = openGroups.find((entry) => entry.id === openTicketId);
-          const assigneeCode = group?.lines.find((line) => line.openAssignedWorkerCode)?.openAssignedWorkerCode;
+          const assigneeCode = openAssignees(group?.lines || [])[0]?.code;
           const draft = ticketDrafts.get(openTicketId);
           activeWorker = workers.find((worker) => worker.code === draft?.workerCode) || workers.find((worker) => worker.code === assigneeCode) || [...(group?.lines || [])].reverse().map((line) => workers.find((worker) => worker.code === line.workerCode)).find(Boolean) || workers.find((worker) => worker.code === activeWorker?.code) || workers[0] || null;
           renderTickets(root);
@@ -1786,7 +1820,7 @@ Error generating stack: `+g.message+`
       content.querySelectorAll("[data-delete-ticket]").forEach((button) => button.addEventListener("click", () => {
         deleteService(button.dataset.deleteTicket);
       }));
-      const save = async (keepOpen, selectedOpenWorker = null) => {
+      const save = async (keepOpen, selectedOpenWorkers = []) => {
         if (ticketSaveInFlight) return;
         if (activeGroup) {
           const currentGroup = getTickets().filter(line => line.ticketGroupId === activeGroup.id);
@@ -1796,7 +1830,7 @@ Error generating stack: `+g.message+`
             return;
           }
         }
-        if (keepOpen && !selectedOpenWorker?.code) return alert("Selecciona para quién quedará abierto el ticket.");
+        if (keepOpen && !selectedOpenWorkers.length) return alert("Selecciona para quién quedará abierto el ticket.");
         const currentCustomerName = activeGroup?.customerName || ticketClientName.trim();
         if (!currentCustomerName || (!pendingTicketLines.length && !activeGroup)) return alert("Escribe el nombre del cliente y selecciona al menos un servicio.");
         if (pendingTicketLines.some((line) => line.serviceName === "PRODUCTO" && !String(line.productName || "").trim())) return alert("Escribe el nombre del producto antes de guardar el ticket.");
@@ -1808,7 +1842,7 @@ Error generating stack: `+g.message+`
         const ticketNumber = activeGroup?.ticketNumber ?? nextNumber;
         const paymentMethod = activeGroup?.lines.find((line) => ["cash", "credit_card", "transfer"].includes(line.paymentMethod))?.paymentMethod || null;
         const details = activeGroup ? { customerName: activeGroup.customerName, customerLastName: activeGroup.customerLastName } : { customerName: currentCustomerName, customerLastName: "" };
-        const assignmentFields = keepOpen ? { openAssignedWorkerCode: selectedOpenWorker.code, openAssignedWorkerName: selectedOpenWorker.name, openAssignedWorkerSpecialty: selectedOpenWorker.specialty } : {};
+        const assignmentFields = keepOpen ? { openAssignedWorkers: selectedOpenWorkers.map(({code, name, specialty}) => ({code, name, specialty})), openAssignedWorkerCode: selectedOpenWorkers[0].code, openAssignedWorkerName: selectedOpenWorkers[0].name, openAssignedWorkerSpecialty: selectedOpenWorkers[0].specialty } : {};
         const tickets = getTickets().map((ticket) => ticket.ticketGroupId === groupId ? { ...ticket, ...assignmentFields, ticketStatus: status, ...(status === "finalized" ? { closedAt: now } : {}) } : ticket);
         tickets.push(...pendingTicketLines.map((line) => ({ id: ticketId(), ticketGroupId: groupId, ticketNumber, ticketStatus: status, paymentMethod, createdAt: now, localDate: localDate(), workerCode: line.workerCode, workerName: line.workerName, workerSpecialty: line.workerSpecialty || ticketLineSpecialty(line), serviceName: line.serviceName, productName: line.productName || null, amount: line.amount, supplies: validUsage(line.supplies), ...details, ...assignmentFields, ...(status === "finalized" ? { closedAt: now } : {}) })));
         ticketSaveInFlight = true;
@@ -1828,7 +1862,7 @@ Error generating stack: `+g.message+`
         } catch (error) { alert("No se pudo guardar el ticket: " + error.message); }
         finally { ticketSaveInFlight = false; saveButtons.forEach((button) => { if (button) button.disabled = false; }); }
       };
-      content.querySelector('[data-action="save-open"]').addEventListener("click", () => chooseOpenTicketWorker(root, activeGroup?.lines.find((line) => line.openAssignedWorkerCode)?.openAssignedWorkerCode || "", (worker) => save(true, worker)));
+      content.querySelector('[data-action="save-open"]').addEventListener("click", () => chooseOpenTicketWorker(root, openAssignees(activeGroup?.lines || []).map((worker) => worker.code), (workers) => save(true, workers)));
       content.querySelector('[data-action="finalize"]').addEventListener("click", () => save(false));
       if (root.dataset.view === "tickets") {
         const actions = content.querySelector(".pt-ticket-actions");

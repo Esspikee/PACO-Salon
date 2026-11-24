@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import {randomUUID} from 'node:crypto'
 import {fileURLToPath, pathToFileURL} from 'node:url'
-import {copyFile, mkdir, readFile, rename, rm, writeFile} from 'node:fs/promises'
+import {copyFile, mkdir, readFile, readdir, rename, rm, writeFile} from 'node:fs/promises'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const clone = value => structuredClone(value)
@@ -52,6 +52,7 @@ export class SalonStore {
     this.dataDirectory = dataDirectory
     this.seedPath = seedPath
     this.statePath = path.join(dataDirectory, 'tablero.json')
+    this.recoveredFromBackup = false
     this.state = null
     this.undo = []
     this.operations = new Set()
@@ -62,10 +63,16 @@ export class SalonStore {
     try {
       this.state = validateBackup(JSON.parse(await readFile(this.statePath, 'utf8')))
     } catch (error) {
-      if (error?.code !== 'ENOENT') throw new Error(`No se pudo leer ${this.statePath}: ${error.message}`)
-      const seed = JSON.parse(await readFile(this.seedPath, 'utf8'))
-      this.state = validateBackup(Array.isArray(seed) ? {format: 'salon-queue', schema: 1, version: 1, workers: seed} : seed)
-      await this.persist(this.state)
+      if (error?.code === 'ENOENT') {
+        const seed = JSON.parse(await readFile(this.seedPath, 'utf8'))
+        this.state = validateBackup(Array.isArray(seed) ? {format: 'salon-queue', schema: 1, version: 1, workers: seed} : seed)
+        await this.persist(this.state)
+      } else {
+        try {this.state = validateBackup(JSON.parse(await readFile(this.statePath + '.bak', 'utf8')))}
+        catch {throw new Error(`No se pudo leer ${this.statePath}: ${error.message}`)}
+        this.recoveredFromBackup = true
+        console.warn(`Se recuperó el tablero desde ${this.statePath}.bak; revisa los cambios recientes.`)
+      }
     }
   }
 
@@ -78,12 +85,17 @@ export class SalonStore {
   async persist(state) {
     const temporary = this.statePath + '.tmp'
     await writeFile(temporary, JSON.stringify(state, null, 2) + '\n', 'utf8')
+    if (!this.recoveredFromBackup) {
+      try {await copyFile(this.statePath, this.statePath + '.bak')}
+      catch (error) {if (error.code !== 'ENOENT') throw error}
+    }
     try {await rename(temporary, this.statePath)}
     catch (error) {
       if (!['EPERM', 'EACCES'].includes(error.code)) throw error
       await copyFile(temporary, this.statePath)
       await rm(temporary, {force: true})
     }
+    this.recoveredFromBackup = false
   }
 
   async apply(body) {
@@ -201,23 +213,73 @@ export async function createSalonServer(options = {}) {
   await store.initialize()
   const ticketPath = path.join(dataDirectory, 'tickets.json')
   let ticketState
+  let ticketsRecoveredFromBackup = false
   try {ticketState = JSON.parse(await readFile(ticketPath, 'utf8'))}
   catch (error) {
-    if (error.code !== 'ENOENT') throw error
-    ticketState = {tickets: [], nextTicketNumber: 0, settings: {}}
+    if (error.code === 'ENOENT') ticketState = {tickets: [], nextTicketNumber: 0, settings: {}}
+    else {
+      try {ticketState = JSON.parse(await readFile(ticketPath + '.bak', 'utf8'))}
+      catch {throw new Error(`No se pudo leer ${ticketPath}: ${error.message}`)}
+      ticketsRecoveredFromBackup = true
+      console.warn(`Se recuperaron los tickets desde ${ticketPath}.bak; revisa los cambios recientes.`)
+    }
   }
   if (!Array.isArray(ticketState.tickets) || !Number.isSafeInteger(ticketState.nextTicketNumber) || !ticketState.settings || typeof ticketState.settings !== 'object') throw new Error(`No se pudo leer ${ticketPath}: datos inválidos.`)
   const ticketSnapshot = () => clone(ticketState)
+  const backupsDirectory = options.backupsDirectory || (options.dataDirectory ? path.join(dataDirectory, 'backups') : path.join(here, 'backups'))
+  const backupIntervalMs = options.backupIntervalMs || 30 * 60 * 1000
+  const backupSources = options.backupSources !== false
+  let backupInFlight = null
+  const backupNow = () => {
+    if (backupInFlight) return backupInFlight
+    const board = store.backup()
+    const tickets = ticketSnapshot()
+    backupInFlight = (async () => {
+      const root = path.resolve(backupsDirectory)
+      const name = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().slice(0, 8)}`
+      const staging = path.resolve(root, `.tmp-${name}`)
+      const destination = path.resolve(root, name)
+      if (path.dirname(staging) !== root || path.dirname(destination) !== root) throw new Error('Ruta de respaldo inválida.')
+      await mkdir(root, {recursive: true})
+      await mkdir(staging)
+      try {
+        await Promise.all([
+          writeFile(path.join(staging, 'tablero.json'), JSON.stringify(board, null, 2) + '\n', 'utf8'),
+          writeFile(path.join(staging, 'tickets.json'), JSON.stringify(tickets, null, 2) + '\n', 'utf8'),
+          writeFile(path.join(staging, 'manifest.json'), JSON.stringify({format: 'salon-backup', createdAt: new Date().toISOString(), employeeCount: board.workers.length, ticketLineCount: tickets.tickets.length, sourceArchive: backupSources ? 'source.tar.gz' : null}, null, 2) + '\n', 'utf8')
+        ])
+        if (backupSources) {
+          const entries = (await readdir(here)).filter(name => !['.git', 'data', 'backups', 'runtime'].includes(name) && !name.endsWith('.log'))
+          await new Promise((resolve, reject) => {
+            const archive = spawn('tar', ['-czf', path.join(staging, 'source.tar.gz'), ...entries.map(name => './' + name)], {cwd: here, windowsHide: true, stdio: 'ignore'})
+            archive.on('error', reject)
+            archive.on('close', code => code === 0 ? resolve() : reject(new Error(`No se pudo comprimir el proyecto (${code}).`)))
+          })
+        }
+        await rename(staging, destination)
+        return destination
+      } catch (error) {
+        await rm(staging, {recursive: true, force: true})
+        throw error
+      }
+    })().finally(() => {backupInFlight = null})
+    return backupInFlight
+  }
   const ticketSettings = new Set(['salon-service-prices-v1', 'salon-custom-services-v1', 'salon-deleted-services-v1', 'salon-color-supplies-v1', 'salon-service-specialties-v1'])
   const saveTicketState = async next => {
     const temporary = ticketPath + '.tmp'
     await writeFile(temporary, JSON.stringify(next, null, 2) + '\n', 'utf8')
+    if (!ticketsRecoveredFromBackup) {
+      try {await copyFile(ticketPath, ticketPath + '.bak')}
+      catch (error) {if (error.code !== 'ENOENT') throw error}
+    }
     try {await rename(temporary, ticketPath)}
     catch (error) {
       if (!['EPERM', 'EACCES'].includes(error.code)) throw error
       await copyFile(temporary, ticketPath)
       await rm(temporary, {force: true})
     }
+    ticketsRecoveredFromBackup = false
     ticketState = next
   }
   const updateTickets = async body => {
@@ -262,7 +324,10 @@ export async function createSalonServer(options = {}) {
           update.status = ticket.ticketStatus
           update.closedAt = ticket.closedAt
         }
-        if (typeof ticket.openAssignedWorkerCode === 'string' && ticket.openAssignedWorkerCode && typeof ticket.openAssignedWorkerName === 'string' && ticket.openAssignedWorkerName) {
+        if (Array.isArray(ticket.openAssignedWorkers) && ticket.openAssignedWorkers.length) {
+          if (ticket.openAssignedWorkers.length > 100 || ticket.openAssignedWorkers.some(worker => !worker || typeof worker.code !== 'string' || !worker.code || typeof worker.name !== 'string' || !worker.name || !['MANICURISTA', 'ESTILISTA', 'AUXILIAR'].includes(worker.specialty))) throw new HttpError(400, 'Asignación de ticket inválida.')
+          update.assignment = {workers: ticket.openAssignedWorkers.map(worker => ({code: worker.code, name: worker.name, specialty: worker.specialty}))}
+        } else if (typeof ticket.openAssignedWorkerCode === 'string' && ticket.openAssignedWorkerCode && typeof ticket.openAssignedWorkerName === 'string' && ticket.openAssignedWorkerName) {
           update.assignment = {code: ticket.openAssignedWorkerCode, name: ticket.openAssignedWorkerName, specialty: ticket.openAssignedWorkerSpecialty}
         }
         groupUpdates.set(ticket.ticketGroupId, update)
@@ -277,9 +342,12 @@ export async function createSalonServer(options = {}) {
             else if (statusChanged || update.closedAt) ticket.closedAt = update.closedAt || new Date().toISOString()
           }
           if (update.assignment) {
-            ticket.openAssignedWorkerCode = update.assignment.code
-            ticket.openAssignedWorkerName = update.assignment.name
-            ticket.openAssignedWorkerSpecialty = update.assignment.specialty
+            const first = update.assignment.workers?.[0] || update.assignment
+            ticket.openAssignedWorkerCode = first.code
+            ticket.openAssignedWorkerName = first.name
+            ticket.openAssignedWorkerSpecialty = first.specialty
+            if (update.assignment.workers) ticket.openAssignedWorkers = clone(update.assignment.workers)
+            else delete ticket.openAssignedWorkers
           }
         }
       }
@@ -326,8 +394,9 @@ export async function createSalonServer(options = {}) {
     ['/auxiliar', 'auxiliar.html'], ['/auxiliar.html', 'auxiliar.html'],
     ['/manicuristas', 'manicuristas.html'], ['/manicuristas.html', 'manicuristas.html'],
     ['/estilistas', 'estilistas.html'], ['/estilistas.html', 'estilistas.html'], ['/Estilistas.html', 'estilistas.html'],
-    ['/juan-pablo', 'juan-pablo.html'], ['/juan-pablo.html', 'juan-pablo.html'],
+    ['/juan-pablo', 'juan-pablo-2.0.html'], ['/juan-pablo.html', 'juan-pablo-2.0.html'],
     ['/juan-pablo-2.0', 'juan-pablo-2.0.html'], ['/juan-pablo-2.0.html', 'juan-pablo-2.0.html'],
+    ['/william', 'william.html'], ['/william.html', 'william.html'],
   ])
 
   const server = http.createServer(async (request, response) => {
@@ -388,8 +457,13 @@ export async function createSalonServer(options = {}) {
     }
   })
   const keepAlive = setInterval(() => {for (const response of eventClients) response.write(': ping\n\n')}, 20_000)
+  keepAlive.unref()
   server.on('close', () => clearInterval(keepAlive))
-  return {server, store}
+  await backupNow()
+  const backupTimer = setInterval(() => {void backupNow().catch(error => console.error('No se pudo crear el respaldo automático:', error))}, backupIntervalMs)
+  backupTimer.unref()
+  server.on('close', () => clearInterval(backupTimer))
+  return {server, store, backupNow, backupsDirectory}
 }
 
 function networkAddresses(port) {
@@ -398,21 +472,26 @@ function networkAddresses(port) {
   return [...new Set(addresses)]
 }
 
+function printAccessLinks(port) {
+  console.log(`Panel principal: http://localhost:${port}/main`)
+  for (const address of networkAddresses(port)) {
+    console.log(`\nEn las tablets usando ${address}:`)
+    console.log(`  Principal:    ${address}/main`)
+    console.log(`  Auxiliar:     ${address}/auxiliar`)
+    console.log(`  Manicuristas: ${address}/manicuristas`)
+    console.log(`  Estilistas:   ${address}/estilistas`)
+    console.log(`  Juan Pablo:   ${address}/juan-pablo-2.0`)
+    console.log(`  William:      ${address}/william`)
+  }
+}
+
 export async function startSalonServer({host = process.env.HOST || '0.0.0.0', port = Number(process.env.PORT || 8080)} = {}) {
   const {server, store} = await createSalonServer()
   await new Promise((resolve, reject) => {server.once('error', reject); server.listen(port, host, resolve)})
   const actualPort = server.address().port
   console.log('\nJOSEPP · Servidor de turnos activo')
   console.log(`Datos: ${store.statePath}`)
-  console.log(`Panel principal: http://localhost:${actualPort}/main`)
-  for (const address of networkAddresses(actualPort)) {
-    console.log(`\nEn las tablets usando ${address}:`)
-    console.log(`  Principal:    ${address}/main`)
-    console.log(`  Auxiliar:     ${address}/auxiliar`)
-    console.log(`  Manicuristas: ${address}/manicuristas`)
-    console.log(`  Estilistas:   ${address}/estilistas`)
-    console.log(`  Juan Pablo:  ${address}/juan-pablo`)
-  }
+  printAccessLinks(actualPort)
   console.log('\nMantén esta ventana abierta. Presiona Ctrl+C para apagar el servidor.\n')
   return {server, store}
 }
@@ -426,7 +505,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
       browser.unref()
     }
   }).catch(error => {
-    if (error.code === 'EADDRINUSE') console.error(`El puerto ${process.env.PORT || 8080} ya está en uso. Es posible que el servidor ya esté abierto.`)
+    if (error.code === 'EADDRINUSE') {
+      console.error(`El puerto ${process.env.PORT || 8080} ya está en uso. El servidor puede estar abierto en otra ventana.`)
+      printAccessLinks(Number(process.env.PORT || 8080))
+    }
     else console.error('No se pudo iniciar el servidor:', error.message)
     process.exitCode = 1
   })

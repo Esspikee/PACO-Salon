@@ -20,5 +20,9 @@ echo Usando Node.js: "%NODE_EXE%"
 set "SALON_OPEN_BROWSER=1"
 "%NODE_EXE%" server.mjs
 echo.
-echo El servidor se detuvo.
+if errorlevel 1 (
+  echo Revisa el mensaje anterior. Si el puerto esta en uso, el servidor ya funciona en otra ventana.
+) else (
+  echo El servidor se detuvo.
+)
 pause

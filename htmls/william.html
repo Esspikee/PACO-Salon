@@ -1,14 +1,14 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"><title>Juan Pablo · Tickets Josepp</title><style>*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif}button,input,select{font:inherit}button,summary{-webkit-tap-highlight-color:transparent;touch-action:manipulation}button{cursor:pointer;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);padding:9px 13px;display:inline-flex;align-items:center;justify-content:center;gap:8px}button:disabled{opacity:.45;cursor:default}button:hover:not(:disabled){border-color:var(--accent)}button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}svg{flex-shrink:0}h1,h2,h3,p{margin:0}small{display:block}.salon-app{--accent:#356451;--tint:#e9f0e5;--canvas:#f5f5ef;--panel:#eef1e9;--card:#fffefa;--text:#293d33;--muted:#717b71;--line:#dde3d7;--next:#e9eae6;--next-text:#737773;--queue:#f4efe5;background:var(--canvas);color:var(--text);min-height:100dvh;color-scheme:light}.salon-app[data-palette=rose]{--accent:#9a5068;--tint:#f5e7ec;--panel:#f4ecef;--queue:#f5eee8}.salon-app[data-palette=ocean]{--accent:#326c92;--tint:#e2eff7;--panel:#eaf0f3;--queue:#f0f1ea}.salon-app[data-palette=lavender]{--accent:#76579c;--tint:#eee7f7;--panel:#f0ecf5;--queue:#f2efe7}.salon-app.dark{--canvas:#181c1b;--panel:#232b27;--card:#2b332f;--text:#edf1eb;--muted:#aab5ac;--line:#414b43;--next:#303533;--next-text:#abb1ad;--queue:#282b26;--accent:#9dc9ad;--tint:#354c3d;color-scheme:dark}.salon-app.dark[data-palette=rose]{--accent:#e6aac0;--tint:#50363f;--panel:#30272c;--queue:#2e2a27}.salon-app.dark[data-palette=ocean]{--accent:#9bcbea;--tint:#2d4656;--panel:#232d33;--queue:#292e2d}.salon-app.dark[data-palette=lavender]{--accent:#c9afea;--tint:#443653;--panel:#2c2733;--queue:#2d2b2c}.board-page{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}.app-controls{height:58px;flex:0 0 58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:5px 18px;position:relative;z-index:30}.undo-button{justify-self:start;background:transparent;border-color:transparent;font-size:13px}.appearance{justify-self:end}.menu,.appearance{position:relative}.menu summary,.appearance summary{min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;cursor:pointer;list-style:none;border-radius:10px;color:var(--accent);font-size:13px;font-weight:600}.menu summary::-webkit-details-marker,.appearance summary::-webkit-details-marker{display:none}details[open]>summary{background:var(--tint)}.menu nav,.appearance-panel{position:absolute;top:calc(100% + 5px);padding:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 35px #0002;z-index:40}.menu nav{width:220px;left:50%;transform:translate(-50%);display:flex;flex-direction:column;gap:4px}.menu nav button{justify-content:flex-start;border-color:transparent}.menu nav button[aria-current]{background:var(--tint);color:var(--accent)}.appearance-panel{right:0;width:276px;padding:18px}.appearance-panel h2{font-size:17px;margin-bottom:16px}.appearance-panel p{font-size:12px;margin-bottom:10px;color:var(--muted)}.palettes{display:grid;grid-template-columns:1fr 1fr;gap:8px}.palettes button{font-size:12px;justify-content:flex-start;padding:8px}.palettes button span{height:18px;width:18px;border-radius:50%}.palettes button[aria-pressed=true]{border:2px solid var(--accent);background:var(--tint)}.mode-toggle{margin:18px 0 10px;width:100%;justify-content:flex-start;font-size:13px}.switch-track{margin-left:auto;width:34px;height:21px;border-radius:20px;background:var(--line);padding:3px}.switch-track>span{display:block;width:15px;height:15px;border-radius:50%;background:var(--card)}[aria-checked=true] .switch-track{background:var(--accent)}[aria-checked=true] .switch-track>span{transform:translate(13px)}.appearance-panel small{color:var(--muted);font-size:11px}.queue-board{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.08fr;gap:18px;padding:0 18px 18px}.available-panels{display:grid;grid-template-rows:1fr 1fr;gap:18px;min-height:0}.available-panel{display:flex;flex-direction:column;min-height:0;padding:23px 26px;border:1px solid var(--line);border-radius:20px;background:var(--panel)}.available-panel h1{font-size:15px;font-weight:650;color:var(--accent)}.current-person{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;text-align:center;padding:12px 0}.current-person>strong{font-family:Georgia,Times New Roman,serif;font-size:clamp(29px,3.8vw,56px);font-weight:700;line-height:1.15;overflow-wrap:anywhere;max-width:100%}.available-badge{display:inline-flex;align-items:center;gap:6px;background:var(--tint);color:var(--accent);font-size:11px;border-radius:20px;padding:5px 10px}.next-person{display:flex;align-items:center;gap:16px;padding:14px 17px;border-radius:12px;background:var(--next);color:var(--next-text)}.next-person>span{font-size:11px;text-transform:uppercase;letter-spacing:1px}.next-person strong{font-size:16px;font-weight:500;overflow-wrap:anywhere}.queue-panel{display:flex;flex-direction:column;min-height:0;padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--queue)}.queue-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px}.queue-heading h2{font-size:17px;font-weight:650}.queue-heading>span{font-size:10px;color:var(--muted);text-align:right;max-width:150px}.queue-columns{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}.queue-column{min-height:0;display:flex;flex-direction:column;position:relative}.queue-column h3{font-size:13px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);margin-bottom:10px}.queue-column h3 span{border-radius:6px;background:var(--card);padding:2px 6px;font-size:11px;font-weight:400}.queue-column ol{padding:0;margin:0;list-style:none;display:grid;gap:7px;flex:1;min-height:0;overflow:auto;max-height:100%}.queue-column li{min-height:0;max-height:72px}.queue-person{width:100%;height:100%;min-height:44px;justify-content:flex-start;padding:8px 10px;gap:9px;box-shadow:0 2px 3px #00000004}.queue-person strong{font-size:13px;font-weight:600;line-height:1.25;flex:1;text-align:left;overflow-wrap:anywhere}.queue-number{font-size:11px;color:var(--muted);min-width:16px;text-align:center;font-variant-numeric:tabular-nums}.queue-person svg{color:var(--muted)}.queue-person.first{background:var(--tint);border-color:var(--accent);color:var(--accent)}.queue-person.first svg,.queue-person.first .queue-number{color:var(--accent)}.empty{font-size:13px;color:var(--muted);padding:20px 4px}.queue-column>.empty{position:absolute;top:45px;left:0;right:0}.team-content{max-width:1000px;margin:auto;padding:25px 22px 40px}.team-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:26px}.team-heading h1{font:32px Georgia,serif;margin-bottom:8px}.team-heading p{font-size:13px;color:var(--muted)}.primary{background:var(--accent);color:var(--canvas);border-color:transparent}.team-section{padding:20px;border:1px solid var(--line);background:var(--panel);border-radius:16px;margin-bottom:20px}.team-section h2{font-size:17px;margin-bottom:10px}.team-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.team-row:last-child{border:0}.team-row strong{font-size:14px}.team-row small{color:var(--muted);font-size:11px;margin-top:4px}.team-row button{font-size:12px}dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:24px;width:440px;max-width:calc(100vw - 24px);max-height:90dvh}dialog::backdrop{background:#101c2266;backdrop-filter:blur(3px)}.dialog-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.dialog-heading h2{font-size:21px}.dialog-heading button{border:0;background:none}label{display:flex;flex-direction:column;gap:8px;margin:18px 0;font-size:13px;font-weight:600}input,select{background:var(--canvas);color:var(--text);border:1px solid var(--line);border-radius:9px;min-height:46px;width:100%;padding:10px}.check-label{flex-direction:row;align-items:center;min-height:44px}.check-label input{width:19px;height:19px;min-height:19px;accent-color:var(--accent)}.dialog-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}.message{position:fixed;z-index:35;top:60px;left:50%;transform:translate(-50%);max-width:calc(100vw - 30px);width:560px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);box-shadow:0 8px 25px #0003;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px}.loading{padding:40px;text-align:center;color:var(--muted)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}@media(max-width:1000px){.queue-board{gap:12px;padding:0 12px 12px;grid-template-columns:.9fr 1.1fr}.available-panels{gap:12px}.available-panel{padding:18px}.queue-panel{padding:14px}.queue-columns{gap:9px}.queue-person{padding:6px 7px;gap:6px}.queue-person svg{display:none}.queue-heading{margin-bottom:14px}.queue-heading>span{display:none}.next-person{gap:10px;padding:12px}.next-person strong{font-size:14px}}@media(max-height:680px){.app-controls{height:50px;flex-basis:50px}.queue-panel{padding:12px}.queue-heading{margin-bottom:10px}.queue-column ol{gap:4px}.queue-column h3{margin-bottom:7px}.available-panel{padding:14px 20px}.next-person{padding:10px 13px}.current-person{gap:8px}.queue-board{padding-bottom:10px}}@media(max-width:650px){.queue-board{grid-template-columns:.8fr 1.2fr;gap:8px;padding:0 8px 8px}.available-panels{gap:8px}.available-panel{padding:12px}.available-panel h1{font-size:12px}.current-person>strong{font-size:28px}.next-person{flex-direction:column;align-items:flex-start;gap:4px;padding:10px}.queue-panel{padding:10px}.queue-heading h2{font-size:14px}.queue-columns{gap:6px}.queue-column h3,.queue-person strong{font-size:11px}.queue-number{font-size:10px;min-width:10px}.queue-person{padding:5px;gap:4px}.team-heading{flex-wrap:wrap}.app-controls{padding:4px 8px}.undo-button{font-size:12px;padding:8px}.available-badge{font-size:10px;padding:4px 7px}}.backup-panel{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:20px;margin-bottom:22px}.backup-panel h2{font-size:17px;margin-bottom:10px}.backup-panel p,.backup-panel small{font-size:12px;color:var(--muted);line-height:1.6}.backup-actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}.import-button{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:9px 13px;margin:0;font-size:14px;font-weight:400;cursor:pointer;overflow:hidden}.import-button input{position:absolute;inset:0;opacity:0;cursor:pointer}.import-button:focus-within{outline:3px solid var(--accent);outline-offset:3px}.storage-warning{flex-shrink:0;background:var(--tint);color:var(--text);padding:9px 18px;font-size:12px}.schedule-editor{border:1px solid var(--line);border-radius:16px;padding:16px;margin:20px 0}.schedule-editor legend{font-weight:700;padding:0 6px}.schedule-editor .check-label{margin:0 0 12px}.schedule-editor p{color:var(--muted);font-size:13px;line-height:1.5;margin:12px 0 0}.workdays{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.schedule-editor .workdays label{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;margin:0;min-height:44px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.workdays label.selected{background:var(--tint);border-color:var(--accent);font-weight:700}.workdays input{width:16px;height:16px;min-height:16px;padding:0;accent-color:var(--accent)}.work-hours{display:grid;grid-template-columns:1fr 1fr;gap:12px}.work-hours input{min-width:0;width:100%;box-sizing:border-box}.auxiliary-note{margin:2px 0 12px;color:var(--muted);font-size:14px;line-height:1.5}.team-row small{line-height:1.5}.person-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.queue-person{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.person-menu h2{font-size:21px;margin-bottom:12px}.person-menu p{color:var(--muted);line-height:1.5}.menu summary.logo-menu{padding:0 8px;gap:6px;height:48px}.logo-menu img{display:block;width:46px;height:46px;object-fit:contain;border-radius:0;background:transparent}.salon-app.dark .logo-menu img{filter:brightness(0) invert(1)}.delete-person{color:#b33d3d;min-width:44px}.salon-app.dark .delete-person{color:#faa}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"><title>William 2.0 · Tickets Josepp</title><style>*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif}button,input,select{font:inherit}button,summary{-webkit-tap-highlight-color:transparent;touch-action:manipulation}button{cursor:pointer;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);padding:9px 13px;display:inline-flex;align-items:center;justify-content:center;gap:8px}button:disabled{opacity:.45;cursor:default}button:hover:not(:disabled){border-color:var(--accent)}button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}svg{flex-shrink:0}h1,h2,h3,p{margin:0}small{display:block}.salon-app{--accent:#356451;--tint:#e9f0e5;--canvas:#f5f5ef;--panel:#eef1e9;--card:#fffefa;--text:#293d33;--muted:#717b71;--line:#dde3d7;--next:#e9eae6;--next-text:#737773;--queue:#f4efe5;background:var(--canvas);color:var(--text);min-height:100dvh;color-scheme:light}.salon-app[data-palette=rose]{--accent:#9a5068;--tint:#f5e7ec;--panel:#f4ecef;--queue:#f5eee8}.salon-app[data-palette=ocean]{--accent:#326c92;--tint:#e2eff7;--panel:#eaf0f3;--queue:#f0f1ea}.salon-app[data-palette=lavender]{--accent:#76579c;--tint:#eee7f7;--panel:#f0ecf5;--queue:#f2efe7}.salon-app.dark{--canvas:#181c1b;--panel:#232b27;--card:#2b332f;--text:#edf1eb;--muted:#aab5ac;--line:#414b43;--next:#303533;--next-text:#abb1ad;--queue:#282b26;--accent:#9dc9ad;--tint:#354c3d;color-scheme:dark}.salon-app.dark[data-palette=rose]{--accent:#e6aac0;--tint:#50363f;--panel:#30272c;--queue:#2e2a27}.salon-app.dark[data-palette=ocean]{--accent:#9bcbea;--tint:#2d4656;--panel:#232d33;--queue:#292e2d}.salon-app.dark[data-palette=lavender]{--accent:#c9afea;--tint:#443653;--panel:#2c2733;--queue:#2d2b2c}.board-page{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden}.app-controls{height:58px;flex:0 0 58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:5px 18px;position:relative;z-index:30}.undo-button{justify-self:start;background:transparent;border-color:transparent;font-size:13px}.appearance{justify-self:end}.menu,.appearance{position:relative}.menu summary,.appearance summary{min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;cursor:pointer;list-style:none;border-radius:10px;color:var(--accent);font-size:13px;font-weight:600}.menu summary::-webkit-details-marker,.appearance summary::-webkit-details-marker{display:none}details[open]>summary{background:var(--tint)}.menu nav,.appearance-panel{position:absolute;top:calc(100% + 5px);padding:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 35px #0002;z-index:40}.menu nav{width:220px;left:50%;transform:translate(-50%);display:flex;flex-direction:column;gap:4px}.menu nav button{justify-content:flex-start;border-color:transparent}.menu nav button[aria-current]{background:var(--tint);color:var(--accent)}.appearance-panel{right:0;width:276px;padding:18px}.appearance-panel h2{font-size:17px;margin-bottom:16px}.appearance-panel p{font-size:12px;margin-bottom:10px;color:var(--muted)}.palettes{display:grid;grid-template-columns:1fr 1fr;gap:8px}.palettes button{font-size:12px;justify-content:flex-start;padding:8px}.palettes button span{height:18px;width:18px;border-radius:50%}.palettes button[aria-pressed=true]{border:2px solid var(--accent);background:var(--tint)}.mode-toggle{margin:18px 0 10px;width:100%;justify-content:flex-start;font-size:13px}.switch-track{margin-left:auto;width:34px;height:21px;border-radius:20px;background:var(--line);padding:3px}.switch-track>span{display:block;width:15px;height:15px;border-radius:50%;background:var(--card)}[aria-checked=true] .switch-track{background:var(--accent)}[aria-checked=true] .switch-track>span{transform:translate(13px)}.appearance-panel small{color:var(--muted);font-size:11px}.queue-board{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.08fr;gap:18px;padding:0 18px 18px}.available-panels{display:grid;grid-template-rows:1fr 1fr;gap:18px;min-height:0}.available-panel{display:flex;flex-direction:column;min-height:0;padding:23px 26px;border:1px solid var(--line);border-radius:20px;background:var(--panel)}.available-panel h1{font-size:15px;font-weight:650;color:var(--accent)}.current-person{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;text-align:center;padding:12px 0}.current-person>strong{font-family:Georgia,Times New Roman,serif;font-size:clamp(29px,3.8vw,56px);font-weight:700;line-height:1.15;overflow-wrap:anywhere;max-width:100%}.available-badge{display:inline-flex;align-items:center;gap:6px;background:var(--tint);color:var(--accent);font-size:11px;border-radius:20px;padding:5px 10px}.next-person{display:flex;align-items:center;gap:16px;padding:14px 17px;border-radius:12px;background:var(--next);color:var(--next-text)}.next-person>span{font-size:11px;text-transform:uppercase;letter-spacing:1px}.next-person strong{font-size:16px;font-weight:500;overflow-wrap:anywhere}.queue-panel{display:flex;flex-direction:column;min-height:0;padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--queue)}.queue-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:20px}.queue-heading h2{font-size:17px;font-weight:650}.queue-heading>span{font-size:10px;color:var(--muted);text-align:right;max-width:150px}.queue-columns{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}.queue-column{min-height:0;display:flex;flex-direction:column;position:relative}.queue-column h3{font-size:13px;display:flex;align-items:center;justify-content:space-between;color:var(--muted);margin-bottom:10px}.queue-column h3 span{border-radius:6px;background:var(--card);padding:2px 6px;font-size:11px;font-weight:400}.queue-column ol{padding:0;margin:0;list-style:none;display:grid;gap:7px;flex:1;min-height:0;overflow:auto;max-height:100%}.queue-column li{min-height:0;max-height:72px}.queue-person{width:100%;height:100%;min-height:44px;justify-content:flex-start;padding:8px 10px;gap:9px;box-shadow:0 2px 3px #00000004}.queue-person strong{font-size:13px;font-weight:600;line-height:1.25;flex:1;text-align:left;overflow-wrap:anywhere}.queue-number{font-size:11px;color:var(--muted);min-width:16px;text-align:center;font-variant-numeric:tabular-nums}.queue-person svg{color:var(--muted)}.queue-person.first{background:var(--tint);border-color:var(--accent);color:var(--accent)}.queue-person.first svg,.queue-person.first .queue-number{color:var(--accent)}.empty{font-size:13px;color:var(--muted);padding:20px 4px}.queue-column>.empty{position:absolute;top:45px;left:0;right:0}.team-content{max-width:1000px;margin:auto;padding:25px 22px 40px}.team-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:26px}.team-heading h1{font:32px Georgia,serif;margin-bottom:8px}.team-heading p{font-size:13px;color:var(--muted)}.primary{background:var(--accent);color:var(--canvas);border-color:transparent}.team-section{padding:20px;border:1px solid var(--line);background:var(--panel);border-radius:16px;margin-bottom:20px}.team-section h2{font-size:17px;margin-bottom:10px}.team-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}.team-row:last-child{border:0}.team-row strong{font-size:14px}.team-row small{color:var(--muted);font-size:11px;margin-top:4px}.team-row button{font-size:12px}dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:24px;width:440px;max-width:calc(100vw - 24px);max-height:90dvh}dialog::backdrop{background:#101c2266;backdrop-filter:blur(3px)}.dialog-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.dialog-heading h2{font-size:21px}.dialog-heading button{border:0;background:none}label{display:flex;flex-direction:column;gap:8px;margin:18px 0;font-size:13px;font-weight:600}input,select{background:var(--canvas);color:var(--text);border:1px solid var(--line);border-radius:9px;min-height:46px;width:100%;padding:10px}.check-label{flex-direction:row;align-items:center;min-height:44px}.check-label input{width:19px;height:19px;min-height:19px;accent-color:var(--accent)}.dialog-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}.message{position:fixed;z-index:35;top:60px;left:50%;transform:translate(-50%);max-width:calc(100vw - 30px);width:560px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);box-shadow:0 8px 25px #0003;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:12px}.loading{padding:40px;text-align:center;color:var(--muted)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}@media(max-width:1000px){.queue-board{gap:12px;padding:0 12px 12px;grid-template-columns:.9fr 1.1fr}.available-panels{gap:12px}.available-panel{padding:18px}.queue-panel{padding:14px}.queue-columns{gap:9px}.queue-person{padding:6px 7px;gap:6px}.queue-person svg{display:none}.queue-heading{margin-bottom:14px}.queue-heading>span{display:none}.next-person{gap:10px;padding:12px}.next-person strong{font-size:14px}}@media(max-height:680px){.app-controls{height:50px;flex-basis:50px}.queue-panel{padding:12px}.queue-heading{margin-bottom:10px}.queue-column ol{gap:4px}.queue-column h3{margin-bottom:7px}.available-panel{padding:14px 20px}.next-person{padding:10px 13px}.current-person{gap:8px}.queue-board{padding-bottom:10px}}@media(max-width:650px){.queue-board{grid-template-columns:.8fr 1.2fr;gap:8px;padding:0 8px 8px}.available-panels{gap:8px}.available-panel{padding:12px}.available-panel h1{font-size:12px}.current-person>strong{font-size:28px}.next-person{flex-direction:column;align-items:flex-start;gap:4px;padding:10px}.queue-panel{padding:10px}.queue-heading h2{font-size:14px}.queue-columns{gap:6px}.queue-column h3,.queue-person strong{font-size:11px}.queue-number{font-size:10px;min-width:10px}.queue-person{padding:5px;gap:4px}.team-heading{flex-wrap:wrap}.app-controls{padding:4px 8px}.undo-button{font-size:12px;padding:8px}.available-badge{font-size:10px;padding:4px 7px}}.backup-panel{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:20px;margin-bottom:22px}.backup-panel h2{font-size:17px;margin-bottom:10px}.backup-panel p,.backup-panel small{font-size:12px;color:var(--muted);line-height:1.6}.backup-actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}.import-button{position:relative;display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:9px 13px;margin:0;font-size:14px;font-weight:400;cursor:pointer;overflow:hidden}.import-button input{position:absolute;inset:0;opacity:0;cursor:pointer}.import-button:focus-within{outline:3px solid var(--accent);outline-offset:3px}.storage-warning{flex-shrink:0;background:var(--tint);color:var(--text);padding:9px 18px;font-size:12px}.schedule-editor{border:1px solid var(--line);border-radius:16px;padding:16px;margin:20px 0}.schedule-editor legend{font-weight:700;padding:0 6px}.schedule-editor .check-label{margin:0 0 12px}.schedule-editor p{color:var(--muted);font-size:13px;line-height:1.5;margin:12px 0 0}.workdays{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.schedule-editor .workdays label{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;margin:0;min-height:44px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.workdays label.selected{background:var(--tint);border-color:var(--accent);font-weight:700}.workdays input{width:16px;height:16px;min-height:16px;padding:0;accent-color:var(--accent)}.work-hours{display:grid;grid-template-columns:1fr 1fr;gap:12px}.work-hours input{min-width:0;width:100%;box-sizing:border-box}.auxiliary-note{margin:2px 0 12px;color:var(--muted);font-size:14px;line-height:1.5}.team-row small{line-height:1.5}.person-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.queue-person{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.person-menu h2{font-size:21px;margin-bottom:12px}.person-menu p{color:var(--muted);line-height:1.5}.menu summary.logo-menu{padding:0 8px;gap:6px;height:48px}.logo-menu img{display:block;width:46px;height:46px;object-fit:contain;border-radius:0;background:transparent}.salon-app.dark .logo-menu img{filter:brightness(0) invert(1)}.delete-person{color:#b33d3d;min-width:44px}.salon-app.dark .delete-person{color:#faa}
 </style>
 </head><body class="juan-personal">
 <style id="juan-local-test-style">#juan-local-test-badge{position:fixed;z-index:1270;top:8px;right:8px;max-width:calc(100vw - 16px);padding:6px 10px;border:1px solid #dde3d7;border-radius:999px;background:#fffefa;color:#356451;box-shadow:0 3px 12px #0002;font-size:11px;font-weight:750}</style>
 <script>
   (() => {
     if (/^https?:$/.test(location.protocol)) return;
-    const STORAGE_KEY = "salon-juan-offline-board-v1";
-    const JUAN_ID = "e69d26e7-d3d7-440e-9117-c71e264a1d70";
+    const STORAGE_KEY = "salon-william-offline-board-v1";
+    const JUAN_ID = "63421b4b-e733-4199-b45e-b7f0e24a3dbc";
     const seed = {format:"salon-queue",schema:1,version:1,workers:[
-      {id:JUAN_ID,name:"JUAN PABLO",specialty:"ESTILISTA",active:true},
+      {id:JUAN_ID,name:"WILLIAM",specialty:"AUXILIAR",active:false},
       {id:"c9e34419-6cb6-436a-87e6-6937ea6976ad",name:"JOSEPP",specialty:"ESTILISTA",active:true},
       {id:"e8709d84-37a8-4ff2-bdcd-934e1a88f7ef",name:"⭐ ANDREA",specialty:"ESTILISTA",active:true},
       {id:"ae56b47f-75fd-4a63-8476-e6cda2aada3b",name:"⭐ ANA",specialty:"ESTILISTA",active:true},
@@ -132,7 +132,7 @@ Error generating stack: `+g.message+`
     const SERVICE_SUPPLIES_KEY = "salon-service-requires-supplies-v1";
     const DEFAULT_SUPPLIES = ["Alfaparf", "Tec Italy", "Decolorante", "Inoa", "L'Oréal", "1/2 decolorante", "Keratina"];
     const NEXT_TICKET_KEY = "salon-next-ticket-number-v1";
-    const PERSONAL_WORKER_ID = "e69d26e7-d3d7-440e-9117-c71e264a1d70";
+    const PERSONAL_WORKER_ID = "63421b4b-e733-4199-b45e-b7f0e24a3dbc";
     const PERSONAL_WORKER_CODE = PERSONAL_WORKER_ID.toUpperCase();
     const TICKET_WORKER_SPECIALTY = /(?:^|\/)manicuristas(?:\.html)?\/?$/i.test(location.pathname) ? "MANICURISTA" : /(?:^|\/)estilistas(?:\.html)?\/?$/i.test(location.pathname) ? "ESTILISTA" : null;
     const PAPER_SERVICES = [
@@ -261,11 +261,18 @@ Error generating stack: `+g.message+`
       if (nameMatches.length === 1) return nameMatches[0].specialty;
       return getAllServices().includes(line.serviceName) ? serviceSpecialty(line.serviceName) : null;
     };
-    const ticketGroupVisible = (group) => !PERSONAL_WORKER_ID || group.lines.some((line) => String(line.workerCode || "").toUpperCase() === PERSONAL_WORKER_CODE || String(line.openAssignedWorkerCode || "").toUpperCase() === PERSONAL_WORKER_CODE);
+    const ticketGroupVisible = (group) => !PERSONAL_WORKER_ID || group.lines.some((line) => String(line.workerCode || "").toUpperCase() === PERSONAL_WORKER_CODE || (Array.isArray(line.openAssignedWorkers) && line.openAssignedWorkers.length ? line.openAssignedWorkers.some((worker) => String(worker.code || "").toUpperCase() === PERSONAL_WORKER_CODE) : String(line.openAssignedWorkerCode || "").toUpperCase() === PERSONAL_WORKER_CODE));
+    const openAssignees = (lines) => {
+      const assigned = lines.find((line) => Array.isArray(line.openAssignedWorkers) && line.openAssignedWorkers.length)?.openAssignedWorkers;
+      if (assigned) return assigned;
+      const legacy = lines.find((line) => line.openAssignedWorkerCode || line.openAssignedWorkerName);
+      return legacy ? [{ code: legacy.openAssignedWorkerCode, name: legacy.openAssignedWorkerName, specialty: legacy.openAssignedWorkerSpecialty }] : [];
+    };
+    const openAssigneeNames = (lines, workers) => openAssignees(lines).map((assignee) => workers.find((worker) => worker.code === assignee.code)?.name || assignee.name).filter(Boolean).join(" / ") || "Sin asignar";
     function refreshTicketView(root) {
       if (!root?.isConnected) return;
       const focused = document.activeElement;
-      if (root.contains(focused) && focused?.matches?.('input:not([type="checkbox"]):not([type="radio"]),textarea,select,[contenteditable="true"]')) {
+      if (root.querySelector("dialog[open]") || root.contains(focused) && focused?.matches?.('input:not([type="checkbox"]):not([type="radio"]),textarea,select,[contenteditable="true"]')) {
         root.pendingTicketRefresh = true;
         return;
       }
@@ -324,7 +331,8 @@ Error generating stack: `+g.message+`
       return next;
     };
     let activeWorker = null;
-    let showFinalizedTickets = true;
+    let showPendingTickets = true;
+    let showExportedTickets = true;
     let showOpenHistoryTickets = true;
     let openTicketId = "";
     let selectedTicketService = "";
@@ -518,7 +526,13 @@ Error generating stack: `+g.message+`
       .available-panels:has(> #paper-ticket-fab){grid-template-rows:minmax(0,1fr) auto minmax(0,1fr)}.available-panels > #paper-ticket-fab,.current-person > #paper-ticket-fab{position:relative;left:auto;bottom:auto;transform:none;z-index:1;justify-self:center;align-self:center;min-width:150px}.current-person > #paper-ticket-fab{margin-top:8px}
       .salon-app .appearance-panel .idle-board-setting{display:grid;gap:8px;margin:16px 0 0;padding:14px 0 0;border-top:1px solid var(--line);font-size:12px;font-weight:700}.salon-app .appearance-panel .idle-board-setting select{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--canvas);color:var(--text);font:600 14px Inter,Segoe UI,Arial,sans-serif}
       #paper-tickets .pt-ticket-lines .pt-unpriced-line{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;align-items:stretch;padding:8px 0}#paper-tickets .pt-unpriced-line .pt-line-actions{display:flex;align-items:end;justify-content:space-between;gap:8px}#paper-tickets .pt-unpriced-line .pt-pending-price-label{display:flex;flex-direction:column;gap:4px;flex:1;max-width:150px;min-width:0;margin:0;font-size:12px;font-weight:700}#paper-tickets .pt-unpriced-line .pt-pending-price-label input{width:100%;min-width:0;min-height:42px;padding:7px 9px;font-size:16px}#paper-tickets .pt-unpriced-line .pt-line-actions button{min-height:42px}#paper-tickets .pt-unpriced-line small{display:flex;flex-wrap:wrap;align-items:center;gap:5px;line-height:1.3}#paper-tickets .pt-unpriced-line .pt-pending-label{margin-left:0}
-      #paper-tickets .pt-open-assignee{margin:0 0 7px;padding:7px 11px;border-radius:9px;background:var(--tint);color:var(--accent);font-size:15px;font-weight:700;overflow-wrap:anywhere}
+      #paper-tickets .pt-open-assignee{display:flex;align-items:center;gap:5px;margin:0 0 7px;padding:7px 11px;border-radius:9px;background:var(--tint);color:var(--accent);font-size:15px;font-weight:700}
+      #paper-tickets .pt-open-assignee-label{flex:none}
+      #paper-tickets .pt-open-assignee-window{display:block;flex:1;min-width:0;overflow:hidden;white-space:nowrap}
+      #paper-tickets .pt-open-assignee-text{display:inline-block;white-space:nowrap}
+      #paper-tickets .pt-open-assignee-window.is-scrolling .pt-open-assignee-text{padding-left:100%;animation:pt-open-assignee-scroll 14s linear infinite}
+      @keyframes pt-open-assignee-scroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+      @media(prefers-reduced-motion:reduce){#paper-tickets .pt-open-assignee-window.is-scrolling{overflow-x:auto}#paper-tickets .pt-open-assignee-window.is-scrolling .pt-open-assignee-text{padding-left:0;animation:none}}
       #paper-tickets .pt-open-worker-modal{width:min(620px,100%);max-height:calc(100vh - 32px);overflow:auto}
       #paper-tickets .pt-open-worker-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
       #paper-tickets .pt-open-worker-column{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px}
@@ -919,8 +933,8 @@ Error generating stack: `+g.message+`
     const showTickets = () => {
       ticketWorkspace = "tickets";
       const existing = document.querySelector("#paper-tickets");
-      if (existing) { navigationVersion++; existing.dataset.view = ticketWorkspace; renderTickets(existing); if (!openTicketId && !ticketClientName.trim()) requestTicketCustomer(existing); return; }
-      openTickets(ticketWorkspace, true);
+      if (existing) { navigationVersion++; existing.dataset.view = ticketWorkspace; renderTickets(existing);  return; }
+      openTickets(ticketWorkspace);
     };
     launcher.addEventListener("click", showTickets);
     const ticketFab = document.createElement("button");
@@ -977,7 +991,7 @@ Error generating stack: `+g.message+`
     else drawer.querySelector(".pt-drawer-logo").textContent = "JOSEPP";
     const drawerNav = drawer.querySelector(".pt-drawer-nav");
     if (PERSONAL_WORKER_ID) {
-      drawerNav.innerHTML = `<strong class="pt-personal-name">JUAN PABLO</strong><button type="button" data-personal-refresh>Actualizar tickets</button>`;
+      drawerNav.innerHTML = `<strong class="pt-personal-name">WILLIAM</strong><button type="button" data-personal-refresh>Actualizar tickets</button>`;
       drawerNav.querySelector("[data-personal-refresh]").addEventListener("click", () => location.reload());
       drawer.querySelector("[data-drawer-appearance]").hidden = true;
     } else drawerNav.append(tableroLauncher, launcher, historyLauncher);
@@ -1033,11 +1047,33 @@ Error generating stack: `+g.message+`
     document.addEventListener("salon-tickets-updated", enhanceIdleSetting);
     enhanceIdleSetting();
     const appearanceSource = document.querySelector(".salon-app .app-controls .appearance");
-    const appearanceSummary = appearanceSource?.querySelector("summary");
-    const appearanceProxy = drawer.querySelector("[data-drawer-appearance]");
-    if (appearanceSummary?.innerHTML) appearanceProxy.innerHTML = appearanceSummary.innerHTML;
-    appearanceProxy.addEventListener("click", () => { if (appearanceSource) appearanceSource.open = !appearanceSource.open; });
-    appearanceSource?.addEventListener("toggle", () => appearanceProxy.setAttribute("aria-expanded", appearanceSource.open ? "true" : "false"));
+    const appearancePanel = appearanceSource?.querySelector(".appearance-panel");
+    if (appearancePanel) {
+      const settings = document.createElement("section");
+      settings.className = "jp-appearance";
+      settings.innerHTML = '<h2>Apariencia</h2><button type="button" role="switch" class="jp-mode" aria-label="Modo oscuro"></button><fieldset><legend>Paleta de colores</legend><div class="jp-colors"></div></fieldset>';
+      drawerNav.append(settings);
+      const mode = settings.querySelector(".jp-mode");
+      mode.onclick = () => appearancePanel.querySelector(".mode-toggle")?.click();
+      const swatches = settings.querySelector(".jp-colors");
+      for (const source of appearancePanel.querySelectorAll(".palettes button")) {
+        const swatch = source.cloneNode(true);
+        swatch.type = "button";
+        swatch.onclick = () => source.click();
+        swatches.append(swatch);
+      }
+      const syncAppearanceMenu = () => {
+        const dark = appearancePanel.querySelector(".mode-toggle")?.getAttribute("aria-checked") === "true";
+        mode.setAttribute("aria-checked", String(dark));
+        mode.textContent = dark ? "Modo oscuro" : "Modo claro";
+        for (const source of appearancePanel.querySelectorAll(".palettes button")) {
+          const swatch = [...swatches.children].find(button => button.ariaLabel === source.ariaLabel);
+          swatch?.setAttribute("aria-pressed", source.getAttribute("aria-pressed"));
+        }
+      };
+      syncAppearanceMenu();
+      new MutationObserver(syncAppearanceMenu).observe(appearancePanel, {subtree:true, attributes:true, childList:true});
+    }
     const fullscreenSource = document.querySelector(".fullscreen-button");
     const fullscreenProxy = drawer.querySelector("[data-drawer-fullscreen]");
     const syncFullscreenProxy = () => { if (fullscreenSource?.innerHTML) fullscreenProxy.innerHTML = fullscreenSource.innerHTML; fullscreenProxy.title = fullscreenSource?.title || "Pantalla completa"; };
@@ -1069,7 +1105,11 @@ Error generating stack: `+g.message+`
     if (PERSONAL_WORKER_ID) {
       const bottomNav = document.createElement("nav");
       bottomNav.id = "juan-nav";
-      bottomNav.setAttribute("aria-label", "Navegación de Juan Pablo");
+      bottomNav.setAttribute("aria-label", "Navegación de William");
+      undoToggle.removeAttribute("id");
+      undoToggle.textContent = "Deshacer";
+      drawerNav.append(undoToggle);
+      drawerToggle.innerHTML = "Menú";
       bottomNav.append(launcher, historyLauncher, drawerToggle);
       document.body.append(bottomNav);
       const updateBottomNavHeight = () => document.body.style.setProperty("--juan-nav-height", `${Math.ceil(bottomNav.getBoundingClientRect().height)}px`);
@@ -1165,38 +1205,38 @@ Error generating stack: `+g.message+`
       const salon = document.querySelector(".salon-app");
       const appearanceObserver = salon ? new MutationObserver(() => syncTicketAppearance(root)) : null;
       appearanceObserver?.observe(salon, { attributes: true, attributeFilter: ["class", "data-palette"] });
-      root.querySelector('[data-pt="back"]').addEventListener("click", () => { appearanceObserver?.disconnect(); if (scrollFrame) cancelAnimationFrame(scrollFrame); for (const control of ticketControls()) control.style.removeProperty("transform"); document.body.classList.remove("ticket-controls-hidden"); if (root.workerRefreshTimer) clearInterval(root.workerRefreshTimer); root.remove(); syncPageScrollLock(); if (window.parent !== window && new URLSearchParams(location.search).has("source")) window.parent.postMessage("salon-close-tickets", "*"); });
+      root.querySelector('[data-pt="back"]').addEventListener("click", () => { appearanceObserver?.disconnect(); if (scrollFrame) cancelAnimationFrame(scrollFrame); for (const control of ticketControls()) control.style.removeProperty("transform"); document.body.classList.remove("ticket-controls-hidden"); if (root.workerRefreshTimer) clearInterval(root.workerRefreshTimer); root.openAssigneeObserver?.disconnect(); root.remove(); syncPageScrollLock(); if (window.parent !== window && new URLSearchParams(location.search).has("source")) window.parent.postMessage("salon-close-tickets", "*"); });
       return root;
     }
 
-    function chooseOpenTicketWorker(root, selectedCode, onSelect) {
+    function chooseOpenTicketWorker(root, selectedCodes, onSelect) {
       if (root.querySelector("[data-open-worker-modal]")) return;
       const workers = getWorkers(true);
       const modal = document.createElement("div");
       modal.className = "pt-modal-backdrop";
       modal.dataset.openWorkerModal = "";
       const columns = [["ESTILISTA", "Estilistas"], ["MANICURISTA", "Manicuristas"], ["AUXILIAR", "Auxiliares"]].map(([specialty, title]) => `<section class="pt-open-worker-column"><h3>${title}</h3>${workers.filter((worker) => worker.specialty === specialty).map((worker) => `<button type="button" class="pt-open-worker-choice" data-open-worker-code="${esc(worker.code)}">${esc(worker.name)}</button>`).join("") || `<p class="pt-empty">Sin personas disponibles.</p>`}</section>`).join("");
-      modal.innerHTML = `<div class="pt-modal pt-open-worker-modal" role="dialog" aria-modal="true" aria-labelledby="pt-open-worker-title"><div class="pt-modal-head"><h2 id="pt-open-worker-title">¿Para quién queda abierto?</h2><button type="button" data-open-worker-cancel aria-label="Cerrar">×</button></div><div class="pt-open-worker-columns">${columns}</div><div class="pt-modal-actions"><button type="button" data-open-worker-cancel>Cancelar</button><button type="button" class="primary" data-open-worker-confirm disabled>Dejar ticket abierto</button></div></div>`;
-      let chosenCode = workers.some((worker) => worker.code === selectedCode) ? selectedCode : "";
+      modal.innerHTML = `<div class="pt-modal pt-open-worker-modal" role="dialog" aria-modal="true" aria-labelledby="pt-open-worker-title"><div class="pt-modal-head"><h2 id="pt-open-worker-title">¿Para quién queda abierto?</h2><button type="button" data-open-worker-cancel aria-label="Cerrar">×</button></div><p>Selecciona una o varias personas.</p><div class="pt-open-worker-columns">${columns}</div><div class="pt-modal-actions"><button type="button" data-open-worker-cancel>Cancelar</button><button type="button" class="primary" data-open-worker-confirm disabled>Dejar ticket abierto</button></div></div>`;
+      const chosenCodes = new Set((Array.isArray(selectedCodes) ? selectedCodes : [selectedCodes]).filter((code) => workers.some((worker) => worker.code === code)));
       const confirm = modal.querySelector("[data-open-worker-confirm]");
       const refresh = () => {
         modal.querySelectorAll("[data-open-worker-code]").forEach((button) => {
-          const selected = button.dataset.openWorkerCode === chosenCode;
+          const selected = chosenCodes.has(button.dataset.openWorkerCode);
           button.classList.toggle("selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
-        confirm.disabled = !chosenCode;
+        confirm.disabled = !chosenCodes.size;
       };
       const close = () => modal.remove();
       modal.querySelectorAll("[data-open-worker-cancel]").forEach((button) => button.addEventListener("click", close));
       modal.addEventListener("click", (event) => { if (event.target === modal) close(); });
       modal.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
-      modal.querySelectorAll("[data-open-worker-code]").forEach((button) => button.addEventListener("click", () => { chosenCode = button.dataset.openWorkerCode; refresh(); }));
+      modal.querySelectorAll("[data-open-worker-code]").forEach((button) => button.addEventListener("click", () => { if (chosenCodes.has(button.dataset.openWorkerCode)) chosenCodes.delete(button.dataset.openWorkerCode); else chosenCodes.add(button.dataset.openWorkerCode); refresh(); }));
       confirm.addEventListener("click", () => {
-        const worker = workers.find((entry) => entry.code === chosenCode);
-        if (!worker) return;
+        const selected = workers.filter((worker) => chosenCodes.has(worker.code));
+        if (!selected.length) return;
         close();
-        onSelect(worker);
+        onSelect(selected);
       });
       root.append(modal);
       refresh();
@@ -1318,9 +1358,11 @@ Error generating stack: `+g.message+`
     }
 
     function renderTickets(root) {
+      if (ticketWorkspace === "history") root.querySelector("[data-ticket-customer-modal]")?.remove();
       root.pendingTicketRefresh = false;
       root.dataset.view = ticketWorkspace;
       const content = root.querySelector("[data-pt-content]");
+      const ticketScroll = content.querySelector(".jp-ticket-scroll")?.scrollTop || 0;
       const historyScroll = Object.fromEntries([...content.querySelectorAll("[data-history]")].map((section) => [section.dataset.history, section.querySelector("ul.pt-receipt-strip")?.scrollLeft || 0]));
       const workers = getWorkers();
       if (PERSONAL_WORKER_ID) activeWorker = workers[0] || null;
@@ -1384,12 +1426,16 @@ Error generating stack: `+g.message+`
         return `<li class="pt-history-ticket"><article class="pt-receipt${finalized ? " pt-reopenable" : ""}" data-ticket-group="${esc(group.id)}" tabindex="0" aria-label="Ticket #${esc(group.ticketNumber)}. ${finalized ? "Toca para reabrir. " : ""}Mantén presionado para borrar." ${finalized ? `data-reopen-ticket="${esc(group.id)}"` : ""}><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-history-payment" role="radiogroup" aria-label="Forma de pago del ticket #${esc(group.ticketNumber)}">${paymentOptions}</div><div class="pt-receipt-foot"><span class="pt-receipt-status">${finalized ? "Finalizado" : "Abierto"}</span><div class="pt-receipt-check">${checkbox}</div></div></article></li>`;
       }).join("")}</ul>` : `<p class="pt-empty">${emptyMessage}</p>`;
       const finalizedGroups = historyGroups.filter(isFinalized);
+      const pendingGroups = finalizedGroups.filter((group) => !group.lines.every(isEntered));
+      const exportedGroups = finalizedGroups.filter((group) => group.lines.every(isEntered));
       const today = localDate();
       root.dataset.historyDate = today;
-      const finalizedTodayGroups = finalizedGroups.filter(group => receiptDate(group) === today);
-      const finalizedOlderGroups = finalizedGroups.filter((group) => !finalizedTodayGroups.includes(group));
-      const finalizedDayMarkup = `<div class="pt-history-day"><h3>Hoy <span>${finalizedTodayGroups.length}</span></h3>${historyList(finalizedTodayGroups, "No hay tickets finalizados hoy.")}</div>${finalizedOlderGroups.length ? `<div class="pt-history-day"><h3>Anteriores <span>${finalizedOlderGroups.length}</span></h3>${historyList(finalizedOlderGroups, "No hay tickets anteriores.")}</div>` : ""}`;
-      const historyMarkup = `<details class="pt-history-section" data-history="finalized" ${showFinalizedTickets ? "open" : ""}><summary>Tickets finalizados <span>${finalizedGroups.length}</span></summary>${finalizedDayMarkup}</details>`;
+      const historyDayMarkup = (groups, emptyToday, emptyOlder) => {
+        const todayGroups = groups.filter((group) => receiptDate(group) === today);
+        const olderGroups = groups.filter((group) => receiptDate(group) !== today);
+        return `<div class="pt-history-day"><h3>Hoy <span>${todayGroups.length}</span></h3>${historyList(todayGroups, emptyToday)}</div>${olderGroups.length ? `<div class="pt-history-day"><h3>Anteriores <span>${olderGroups.length}</span></h3>${historyList(olderGroups, emptyOlder)}</div>` : ""}`;
+      };
+      const historyMarkup = `<details class="pt-history-section" data-history="pending" ${showPendingTickets ? "open" : ""}><summary>Tickets no ingresados <span>${pendingGroups.length}</span></summary>${historyDayMarkup(pendingGroups, "No hay tickets sin ingresar hoy.", "No hay tickets anteriores sin ingresar.")}</details><details class="pt-history-section" data-history="exported" ${showExportedTickets ? "open" : ""}><summary>Tickets ingresados <span>${exportedGroups.length}</span></summary>${historyDayMarkup(exportedGroups, "No hay tickets ingresados hoy.", "No hay tickets ingresados anteriores.")}</details>`;
       const workerColumns = [["MANICURISTA", "Manicuristas"], ["ESTILISTA", "Estilistas"], ["AUXILIAR", "Auxiliares"]].filter(([specialty]) => !TICKET_WORKER_SPECIALTY || specialty === TICKET_WORKER_SPECIALTY || TICKET_WORKER_SPECIALTY === "ESTILISTA" && specialty === "AUXILIAR").map(([specialty, title]) => `<section class="pt-worker-column"><h3>${title}</h3>${workers.filter((worker) => worker.specialty === specialty).map((worker) => `<button type="button" class="pt-worker-choice ${activeWorker?.code === worker.code ? "selected" : ""}" data-worker="${esc(worker.code)}"><strong>${esc(worker.name)}</strong><small>${worker.specialty === "MANICURISTA" ? "Manicurista" : worker.specialty === "AUXILIAR" ? "Auxiliar" : "Estilista"}</small></button>`).join("") || `<p class="pt-empty">Sin personas disponibles.</p>`}</section>`).join("");
       const services = servicesForSpecialty(activeWorker?.specialty).map((name) => `<button class="pt-service ${name === service ? "selected" : ""}" type="button" data-service="${esc(name)}"><strong>${esc(name)}</strong></button>`).join("");
       const openList = openGroups.length ? `<ul class="pt-receipt-strip" aria-label="Tickets abiertos; desliza horizontalmente">${openGroups.map((group) => {
@@ -1397,37 +1443,96 @@ Error generating stack: `+g.message+`
         const dateValue = String(group.lines[0]?.localDate || group.lines[0]?.createdAt || "").slice(0, 10);
         const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
         const shortDate = dateMatch ? `${dateMatch[3]}/${dateMatch[2]}` : "—";
-        const assignedLine = group.lines.find((line) => line.openAssignedWorkerCode || line.openAssignedWorkerName);
-        const assigneeName = allWorkers.find((worker) => worker.code === assignedLine?.openAssignedWorkerCode)?.name || assignedLine?.openAssignedWorkerName || "Sin asignar";
+        const assigneeName = openAssigneeNames(group.lines, allWorkers);
         const serviceRows = group.lines.map((line) => `<div class="pt-history-service-card"><span class="pt-line-info"><strong>${esc(line.serviceName === "PRODUCTO" && line.productName ? line.productName : line.serviceName)}</strong><small>${line.serviceName === "PRODUCTO" ? "PRODUCTO · " : ""}${esc(line.workerName)}${usageText(line.supplies) ? ` · ${esc(usageText(line.supplies))}` : ""}</small></span><span class="pt-line-price">${money(line.amount)}</span></div>`).join("");
-        return `<li class="pt-history-ticket"><div class="pt-open-assignee">Para: <strong>${esc(assigneeName)}</strong></div><article class="pt-receipt pt-open-receipt" role="button" tabindex="0" data-open="${esc(group.id)}" data-ticket-group="${esc(group.id)}" aria-label="Continuar ticket #${esc(group.ticketNumber)} de ${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}. Mantén presionado para borrar."><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-receipt-foot"><span class="pt-receipt-status">Abierto</span><span class="pt-open-continue">Continuar →</span></div></article></li>`;
+        return `<li class="pt-history-ticket"><div class="pt-open-assignee" title="Para: ${esc(assigneeName)}"><span class="pt-open-assignee-label">Para:</span><span class="pt-open-assignee-window"><strong class="pt-open-assignee-text">${esc(assigneeName)}</strong></span></div><article class="pt-receipt pt-open-receipt" role="button" tabindex="0" data-open="${esc(group.id)}" data-ticket-group="${esc(group.id)}" aria-label="Continuar ticket #${esc(group.ticketNumber)} de ${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}. Mantén presionado para borrar."><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-receipt-foot"><span class="pt-receipt-status">Abierto</span><span class="pt-open-continue">Continuar →</span></div></article></li>`;
       }).join("")}</ul>` : `<p class="pt-empty">No hay tickets abiertos.</p>`;
       const historyOpenMarkup = `<details class="pt-history-section" data-history="open" ${showOpenHistoryTickets ? "open" : ""}><summary>Tickets abiertos <span>${openGroups.length}</span></summary>${openList}</details>`;
-      content.innerHTML = `<section class="pt-client"><div class="pt-client-fields"><label><span class="pt-client-title">Cliente</span><input data-client="name" type="text" enterkeyhint="done" maxlength="80" value="${esc(customerName)}" ${activeGroup ? "readonly" : ""} placeholder="Nombre y apellido"></label></div></section>${ticketScreen === "open" ? `<section class="pt-open"><h2>Tickets abiertos</h2>${openList}</section>` : ""}<section class="pt-workbench"><aside class="pt-pane"><div class="pt-pane-head"><h2>Quién atendió</h2></div><div class="pt-worker-columns">${workerColumns}</div></aside><section class="pt-pane pt-services ${activeWorker ? "ready" : ""}"><div class="pt-pane-head"><h2>Servicios</h2><span>${activeWorker ? `${esc(activeWorker.name)} · Mantén presionado para ordenar` : "Selecciona al trabajador"}</span></div><div class="pt-grid">${services}</div></section><aside class="pt-pane pt-value"><h2>Valor</h2>${service ? `<strong>${esc(service)}</strong><div class="pt-value-input"><label>Precio cobrado<input data-amount data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(ticketAmount)}"></label><button class="pt-check" type="button" data-action="add-line" aria-label="Agregar servicio al ticket" title="Agregar servicio al ticket">✓</button></div>` : `<p>Selecciona un servicio.</p>`}${ticketLines.length ? `<div class="pt-ticket-lines"><h3>Servicios del ticket</h3>${ticketLines.map((line, index) => line.pending && line.serviceName === "PRODUCTO" ? `<div class="pt-product-line"><label>PRODUCTO<input data-pending-product-name="${index - persistedLines.length}" type="text" maxlength="80" enterkeyhint="done" autocomplete="off" placeholder="Nombre del producto" value="${esc(line.productName || "")}"><small>${esc(line.workerName)} · Sin guardar</small></label><label>Precio<input data-pending-product-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.productPriceEntered ? formatPrice(line.amount) : ""}"></label><button class="pt-product-delete danger" type="button" data-delete-pending="${index - persistedLines.length}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button></div>` : line.pending && line.needsPrice ? `<div class="pt-unpriced-line"><span>${esc(line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}<em class="pt-pending-label">Sin guardar</em></small></span><span class="pt-line-actions"><label class="pt-pending-price-label">Precio<input data-pending-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.priceEntered ? formatPrice(line.amount) : ""}"></label><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button></span></div>` : `<div><span>${esc(line.serviceName === "PRODUCTO" && line.productName ? `PRODUCTO · ${line.productName}` : line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}${line.pending ? `<em class="pt-pending-label">Sin guardar</em>` : ""}</small></span><strong>${money(line.amount)}</strong><span class="pt-line-actions">${line.pending ? `<button type="button" data-edit-pending="${index - persistedLines.length}">Editar</button><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button>` : line.serviceName === "PRODUCTO" ? `<button class="pt-product-delete danger" type="button" data-delete-ticket="${esc(line.id)}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button>` : `<button type="button" data-edit-ticket="${esc(line.id)}">Editar</button><button class="danger" type="button" data-delete-ticket="${esc(line.id)}">Eliminar</button>`}</span></div>`).join("")}</div>` : ""}<div class="pt-total"><span>Total del ticket</span><strong data-ticket-total>${money(ticketTotal)}</strong></div></aside></section><section class="pt-ticket-actions"><nav class="pt-tabs"><button type="button" class="${ticketScreen === "new" ? "selected" : ""}" data-action="new">Nuevo ticket</button><button type="button" class="${ticketScreen === "open" ? "selected" : ""}" data-action="open-list">Tickets abiertos <span>${openGroups.length}</span></button></nav><button type="button" data-action="save-open">Dejar ticket abierto</button><button type="button" class="primary" data-action="finalize">Finalizar</button></section><section class="pt-recent pt-history"><h2>Historial de tickets</h2>${historyOpenMarkup}${historyMarkup}</section>`;
+      content.innerHTML = `<section class="pt-client"><div class="pt-client-fields"><label><span class="pt-client-title">Cliente</span><input data-client="name" type="text" enterkeyhint="done" maxlength="80" value="${esc(customerName)}" ${activeGroup ? "readonly" : ""} placeholder="Nombre y apellido"></label></div></section>${ticketScreen === "open" ? `<section class="pt-open"><h2>Tickets abiertos</h2>${openList}</section>` : ""}<section class="pt-workbench"><aside class="pt-pane"><div class="pt-pane-head"><h2>Quién atendió</h2></div><div class="pt-worker-columns">${workerColumns}</div></aside><dialog class="pt-pane pt-services ${activeWorker ? "ready" : ""}"><div class="pt-pane-head"><h2>Servicios</h2><span>${activeWorker ? `${esc(activeWorker.name)} · Mantén presionado para ordenar` : "Selecciona al trabajador"}</span></div><div class="pt-grid">${services}</div></dialog><aside class="pt-pane pt-value"><h2>Valor</h2>${service ? `<strong>${esc(service)}</strong><div class="pt-value-input"><label>Precio cobrado<input data-amount data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(ticketAmount)}"></label><button class="pt-check" type="button" data-action="add-line" aria-label="Agregar servicio al ticket" title="Agregar servicio al ticket">✓</button></div>` : `<p>Selecciona un servicio.</p>`}${ticketLines.length ? `<div class="pt-ticket-lines"><h3 hidden>Servicios del ticket</h3>${ticketLines.map((line, index) => line.pending && line.serviceName === "PRODUCTO" ? `<div class="pt-product-line"><label>PRODUCTO<input data-pending-product-name="${index - persistedLines.length}" type="text" maxlength="80" enterkeyhint="done" autocomplete="off" placeholder="Nombre del producto" value="${esc(line.productName || "")}"></label><label>Precio<input data-pending-product-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.productPriceEntered ? formatPrice(line.amount) : ""}"></label><button class="pt-product-delete danger" type="button" data-delete-pending="${index - persistedLines.length}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button><small>${esc(line.workerName)} · Sin guardar</small></div>` : line.pending && line.needsPrice ? `<div class="pt-unpriced-line"><span>${esc(line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}<em class="pt-pending-label">Sin guardar</em></small></span><span class="pt-line-actions"><label class="pt-pending-price-label">Precio<input data-pending-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.priceEntered ? formatPrice(line.amount) : ""}"></label><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button></span></div>` : `<div><span>${esc(line.serviceName === "PRODUCTO" && line.productName ? `PRODUCTO · ${line.productName}` : line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}${line.pending ? `<em class="pt-pending-label">Sin guardar</em>` : ""}</small></span><strong>${money(line.amount)}</strong><span class="pt-line-actions">${line.pending ? `<button type="button" data-edit-pending="${index - persistedLines.length}">Editar</button><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button>` : line.serviceName === "PRODUCTO" ? `<button class="pt-product-delete danger" type="button" data-delete-ticket="${esc(line.id)}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button>` : `<button type="button" data-edit-ticket="${esc(line.id)}">Editar</button><button class="danger" type="button" data-delete-ticket="${esc(line.id)}">Eliminar</button>`}</span></div>`).join("")}</div>` : ""}<div class="pt-total"><span>Total del ticket</span><strong data-ticket-total>${money(ticketTotal)}</strong></div></aside></section><section class="pt-ticket-actions"><nav class="pt-tabs"><button type="button" class="${ticketScreen === "new" ? "selected" : ""}" data-action="new">Nuevo ticket</button><button type="button" class="${ticketScreen === "open" ? "selected" : ""}" data-action="open-list">Tickets abiertos <span>${openGroups.length}</span></button></nav><button type="button" data-action="save-open">Dejar ticket abierto</button><button type="button" class="primary" data-action="finalize">Finalizar</button></section><section class="pt-recent pt-history"><h2>Historial de tickets</h2>${historyOpenMarkup}${historyMarkup}</section>`;
       const workerPane = content.querySelector(".pt-worker-columns")?.closest(".pt-pane");
       workerPane?.remove();
       const servicesPane = content.querySelector(".pt-services");
-      servicesPane.setAttribute("role", "dialog");
-      servicesPane.setAttribute("aria-modal", "true");
-      servicesPane.setAttribute("aria-label", "Seleccionar servicio");
-      servicesPane.querySelector(".pt-pane-head span")?.remove();
+      const choices = new Set();
+      const tiles = [...servicesPane.querySelectorAll("[data-service]")];
+      servicesPane.setAttribute("aria-label", "Agregar servicios");
+      servicesPane.querySelector(".pt-pane-head").innerHTML = `<button type="button" data-back aria-label="Volver">‹</button><h2>Servicios</h2>`;
+      servicesPane.querySelector(".pt-grid").insertAdjacentHTML("beforebegin", `<input class="jp-search" type="search" placeholder="Buscar servicio" aria-label="Buscar servicio"><p class="jp-empty" hidden>Sin resultados</p>`);
+      servicesPane.insertAdjacentHTML("beforeend", '<button type="button" class="jp-done">Listo</button>');
+      const done = servicesPane.querySelector(".jp-done");
+      const search = servicesPane.querySelector(".jp-search");
       const servicesLauncher = document.createElement("button");
       servicesLauncher.type = "button";
       servicesLauncher.className = "pt-services-launcher";
-      servicesLauncher.textContent = "Servicios";
-      servicesPane.before(servicesLauncher);
-      const closeServices = document.createElement("button");
-      closeServices.type = "button";
-      closeServices.textContent = "Cerrar";
-      servicesPane.querySelector(".pt-pane-head").append(closeServices);
-      const dismissServices = () => { servicesPane.classList.remove("pt-picker-open"); servicesLauncher.focus(); };
-      closeServices.addEventListener("click", dismissServices);
-      servicesPane.addEventListener("keydown", (event) => { if (event.key === "Escape") dismissServices(); });
-      servicesLauncher.addEventListener("click", () => { servicesPane.classList.add("pt-picker-open"); closeServices.focus(); });
+      servicesLauncher.textContent = "+ Agregar servicios";
+      servicesLauncher.setAttribute("aria-haspopup", "dialog");
+      const fold = value => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().trim();
+      const updatePicker = () => {
+        const query = fold(search.value);
+        for (const tile of tiles) {
+          tile.hidden = !fold(tile.dataset.service).includes(query);
+          tile.setAttribute("aria-pressed", String(choices.has(tile.dataset.service)));
+        }
+        servicesPane.querySelector(".jp-empty").hidden = tiles.some(tile => !tile.hidden);
+        done.textContent = choices.size ? `Listo · ${choices.size} seleccionado${choices.size === 1 ? "" : "s"}` : "Listo";
+      };
+      search.addEventListener("input", updatePicker);
+      tiles.forEach(tile => tile.addEventListener("click", () => {
+        const name = tile.dataset.service;
+        if (choices.has(name)) choices.delete(name);
+        else choices.add(name);
+        updatePicker();
+      }));
+      servicesLauncher.addEventListener("click", () => {
+        if (!activeWorker) return;
+        if (!activeGroup && !ticketClientName.trim()) {
+          const client = content.querySelector("[data-client]");
+          client.focus();
+          client.required = true;
+          client.reportValidity();
+          return;
+        }
+        choices.clear();
+        search.value = "";
+        updatePicker();
+        servicesPane.classList.add("pt-picker-open");
+        servicesPane.showModal();
+        servicesPane.querySelector("[data-back]").focus();
+      });
+      servicesPane.querySelector("[data-back]").onclick = () => servicesPane.close();
+      servicesPane.addEventListener("close", () => {
+        servicesPane.classList.remove("pt-picker-open");
+        if (servicesLauncher.isConnected) servicesLauncher.focus();
+        if (root.pendingTicketRefresh) refreshTicketView(root);
+      });
+      done.addEventListener("click", () => {
+        servicesPane.close();
+        if (!choices.size) return;
+        for (const serviceName of choices) {
+          const price = servicePrice(serviceName);
+          pendingTicketLines.push({
+            id: `pending-${ticketId()}`, pending: true, workerCode: activeWorker.code,
+            workerName: activeWorker.name, workerSpecialty: activeWorker.specialty,
+            serviceName, amount: price ?? 0, supplies: [],
+            needsPrice: serviceName !== "PRODUCTO" && price === null, priceEntered: price !== null,
+            ...(serviceName === "PRODUCTO" ? { productName: "", productPriceEntered: false } : {})
+          });
+        }
+        renderTickets(root);
+        content.querySelector(".pt-services-launcher").focus({ preventScroll: true });
+      });
       content.querySelector(".pt-history").insertAdjacentHTML("beforebegin", `<section class="pt-open pt-open-home"><div class="pt-open-home-head"><h2>Tickets abiertos</h2><span>${openGroups.length}</span></div>${openList}</section>`);
-      content.querySelector(".pt-client-title").insertAdjacentHTML("afterbegin", `<span class="pt-ticket-number" aria-label="Número de ticket">#${activeGroup?.ticketNumber ?? nextTicketNumber(allTickets)}</span>`);
+      content.querySelector(".pt-client-fields").insertAdjacentHTML("beforebegin", `<header class="jp-heading"><span>William</span><h1>Ticket #${activeGroup?.ticketNumber ?? nextTicketNumber(allTickets)}</h1></header>`);
+      root.openAssigneeObserver?.disconnect();
+      root.openAssigneeObserver = new ResizeObserver(() => {
+        content.querySelectorAll(".pt-open-assignee-window").forEach((viewport) => {
+          if (!viewport.clientWidth) return;
+          viewport.classList.remove("is-scrolling");
+          viewport.classList.toggle("is-scrolling", viewport.querySelector(".pt-open-assignee-text").scrollWidth > viewport.clientWidth + 1);
+        });
+      });
+      content.querySelectorAll(".pt-open-assignee-window").forEach((viewport) => root.openAssigneeObserver.observe(viewport));
       content.querySelectorAll("[data-history]").forEach((section) => { const list = section.querySelector("ul.pt-receipt-strip"); if (list) list.scrollLeft = historyScroll[section.dataset.history] || 0; });
-      content.querySelectorAll("[data-history]").forEach((section) => section.addEventListener("toggle", () => { if (section.dataset.history === "open") showOpenHistoryTickets = section.open; else showFinalizedTickets = section.open; }));
+      content.querySelectorAll("[data-history]").forEach((section) => section.addEventListener("toggle", () => { if (section.dataset.history === "open") showOpenHistoryTickets = section.open; else if (section.dataset.history === "pending") showPendingTickets = section.open; else if (section.dataset.history === "exported") showExportedTickets = section.open; }));
       content.querySelectorAll("[data-payment-group]").forEach((radio) => radio.addEventListener("change", () => {
         const id = radio.dataset.paymentGroup;
         const tickets = getTickets();
@@ -1436,18 +1541,25 @@ Error generating stack: `+g.message+`
       }));
       content.querySelectorAll("[data-ticket-entered]").forEach((checkbox) => checkbox.addEventListener("change", () => {
         const id = checkbox.dataset.ticketEntered;
-        const applyEnteredChange = () => {
+        const shouldEnter = checkbox.checked;
+        const applyEnteredChange = async () => {
           const tickets = getTickets();
           const group = tickets.filter((line) => (line.ticketGroupId || line.id) === id);
           if (!group.length || group.some((line) => line.ticketStatus === "open")) { renderTickets(root); return; }
-          const enteredAt = checkbox.checked ? new Date().toISOString() : null;
-          try { saveTickets(tickets.map((line) => (line.ticketGroupId || line.id) === id ? { ...line, enteredAt } : line)); }
-          catch { alert("No se pudo actualizar el ticket en este navegador."); renderTickets(root); return; }
-          if (TICKET_WORKER_SPECIALTY) showFinalizedTickets = true;
-          else showFinalizedTickets = true;
-          renderTickets(root);
+          checkbox.disabled = true;
+          const enteredAt = shouldEnter ? new Date().toISOString() : null;
+          try {
+            const saved = await saveTickets(tickets.map((line) => (line.ticketGroupId || line.id) === id ? { ...line, enteredAt } : line));
+            if (!saved) throw new Error("No se confirmó el cambio.");
+            if (shouldEnter) showExportedTickets = true;
+            else showPendingTickets = true;
+            renderTickets(root);
+          } catch {
+            alert("No se pudo actualizar el ticket. Inténtalo de nuevo.");
+            renderTickets(root);
+          }
         };
-        if (checkbox.checked) showStyledConfirm(root, { title: "¿Marcar ticket como ingresado?", message: "El ticket se moverá a la sección de tickets ingresados.", confirmText: "Sí, continuar", onConfirm: applyEnteredChange, onCancel: () => { checkbox.checked = false; } });
+        if (shouldEnter) showStyledConfirm(root, { title: "¿Marcar ticket como ingresado?", message: "El ticket se moverá a Tickets ingresados.", confirmText: "Sí, continuar", onConfirm: applyEnteredChange, onCancel: () => { checkbox.checked = false; } });
         else applyEnteredChange();
       }));
       content.querySelectorAll("[data-ticket-group]").forEach((card) => {
@@ -1490,25 +1602,41 @@ Error generating stack: `+g.message+`
       const valueEntry = document.createElement("div");
       valueEntry.innerHTML = `<h2>Valor</h2>${selectedTicketServices.size ? `<div class="pt-multi-values">${[...selectedTicketServices].map(([name, value]) => `<div class="pt-price-row"><span><strong>${esc(name)}</strong>${name === "PRODUCTO" ? `<input class="pt-product-name" data-product-name type="text" maxlength="80" autocomplete="off" placeholder="Nombre del producto" aria-label="Nombre del producto" value="${esc(selectedProductName)}">` : ""}${overriddenPrices.has(name) || servicePrice(name) === null ? `<small>Precio para este ticket</small>` : `<small>${money(value)}</small>`}${requiresSupplies(name) ? `<small class="pt-color-note">${esc(usageText(selectedTicketSupplies.get(name)) || "Sin insumos seleccionados")}</small><button class="pt-supply-edit" type="button" data-edit-supplies="${esc(name)}">Editar insumos</button>` : ""}</span><span class="pt-price-actions">${overriddenPrices.has(name) || servicePrice(name) === null ? `<input aria-label="Precio de ${esc(name)} para este ticket" data-multi-amount="${esc(name)}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" value="${formatPrice(value)}">` : ""}${servicePrice(name) === null ? "" : `<button type="button" data-edit-price="${esc(name)}">${overriddenPrices.has(name) ? "Usar base" : "Editar"}</button>`}</span></div>`).join("")}</div><button class="pt-check" type="button" data-action="add-line" aria-label="Agregar servicios al ticket" title="Agregar servicios al ticket">${editingPendingIndex >= 0 ? "Guardar cambios" : `✓ Agregar ${selectedTicketServices.size}`}</button>` : `<p>Selecciona uno o varios servicios.</p>`}`;
 
-      valuePane.prepend(valueEntry);
+      if (selectedTicketServices.size) valuePane.prepend(valueEntry);
+      valuePane.insertAdjacentHTML("afterbegin", "<h2>Servicios</h2>");
+      valuePane.querySelector(".pt-total").before(servicesLauncher);
+      valuePane.querySelector(".pt-total span").textContent = "Total";
+      servicesLauncher.disabled = !activeWorker || editingPendingIndex >= 0;
       const supplyFields = pendingTicketLines.map((line, index) => {
         if (!requiresSupplies(line.serviceName)) return "";
         const used = validUsage(line.supplies);
         const names = [...new Set([...getSupplies(), ...used.map((item) => item.name)])];
-        return `<fieldset class="pt-inline-supplies"><legend>${esc(line.serviceName)} · Insumos usados</legend>${names.length ? names.map((name, supplyIndex) => `<label><span>${esc(name)}</span><input data-pending-supply="${index}" data-supply-index="${supplyIndex}" type="number" inputmode="numeric" min="0" max="999" step="1" enterkeyhint="done" aria-label="Cantidad usada de ${esc(name)} en ${esc(line.serviceName)}" value="${used.find((item) => item.name === name)?.quantity || 0}"></label>`).join("") : `<p>Añade insumos en Servicios y precios.</p>`}</fieldset>`;
+        return `<fieldset class="pt-inline-supplies"><legend>${esc(line.serviceName)} · Insumos usados</legend>${names.length ? names.map(name => `<div class="pt-supply-quantity jp-supply-row">
+          <span>${esc(name)}</span>
+          <button type="button" data-step="-1" aria-label="Reducir ${esc(name)}">−</button>
+          <input data-pending-supply="${index}" data-name="${esc(name)}" type="number" inputmode="numeric" min="0" max="999" step="1" enterkeyhint="done" aria-label="Cantidad usada de ${esc(name)} en ${esc(line.serviceName)}" value="${used.find(item => item.name === name)?.quantity || 0}">
+          <button type="button" data-step="1" aria-label="Aumentar ${esc(name)}">+</button>
+        </div>`).join("") : `<p>Añade insumos en Servicios y precios.</p>`}</fieldset>`;
       }).join("");
       if (supplyFields) {
         const supplyEditor = document.createElement("div");
         supplyEditor.className = "pt-pending-supplies";
         supplyEditor.innerHTML = supplyFields;
         valuePane.querySelector(".pt-total").before(supplyEditor);
+        supplyEditor.addEventListener("click", event => {
+          const button = event.target.closest("[data-step]");
+          if (!button) return;
+          const input = button.closest(".jp-supply-row").querySelector("input");
+          const current = Math.floor(Number(input.value) || 0);
+          input.value = String(Math.max(0, Math.min(999, current + Number(button.dataset.step))));
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
         supplyEditor.querySelectorAll("[data-pending-supply]").forEach((input) => {
           input.addEventListener("input", () => {
             const line = pendingTicketLines[Number(input.dataset.pendingSupply)];
             if (!line) return;
             const previous = validUsage(line.supplies);
-            const names = [...new Set([...getSupplies(), ...previous.map((item) => item.name)])];
-            const name = names[Number(input.dataset.supplyIndex)];
+            const name = input.dataset.name;
             if (!name) return;
             const quantity = Math.max(0, Math.min(999, Math.floor(Number(input.value) || 0)));
             line.supplies = previous.filter((item) => item.name !== name);
@@ -1576,73 +1704,6 @@ Error generating stack: `+g.message+`
         button.addEventListener("touchend", () => { if (dragging) stop(true); else { clearTimeout(timer); timer = null; if (touchMoved) suppressWorkerClickUntil = Date.now() + 400; } });
         button.addEventListener("touchcancel", () => { if (dragging) stop(false); else { clearTimeout(timer); timer = null; } });
       });
-      content.querySelectorAll("[data-service]").forEach((button) => button.addEventListener("click", () => {
-        if (button.dataset.dragged === "true" || Date.now() < suppressServiceClickUntil || !activeWorker) return;
-        const serviceName = button.dataset.service;
-        const addService = (usage = []) => {
-          pendingTicketLines.push({ id: `pending-${ticketId()}`, pending: true, workerCode: activeWorker.code, workerName: activeWorker.name, workerSpecialty: activeWorker.specialty, serviceName, ...(serviceName === "PRODUCTO" ? { productName: "", productPriceEntered: false } : {}), amount: servicePrice(serviceName) ?? 0, needsPrice: serviceName !== "PRODUCTO" && servicePrice(serviceName) === null, priceEntered: servicePrice(serviceName) !== null, supplies: requiresSupplies(serviceName) ? validUsage(usage) : [] });
-          editingPendingIndex = -1; selectedTicketServices.clear(); selectedTicketSupplies = new Map(); selectedProductName = ""; overriddenPrices.clear(); selectedTicketService = ""; ticketAmount = "";
-          renderTickets(root);
-        };
-        if (!openTicketId && !ticketClientName.trim()) requestTicketCustomer(root, addService);
-        else addService();
-      }));
-      content.querySelectorAll("[data-service]").forEach((button) => {
-        let timer = null, dragging = false, startX = 0, startY = 0, dropTarget = null, dropAfter = false;
-        const grid = button.parentElement;
-        const stop = (save) => {
-          clearTimeout(timer); timer = null;
-          if (!dragging) return;
-          dragging = false; button.classList.remove("pt-dragging"); grid.classList.remove("pt-reordering");
-          dropTarget?.classList.remove("pt-drop-target");
-          button.dataset.dragged = "true"; suppressServiceClickUntil = Date.now() + 400; setTimeout(() => { delete button.dataset.dragged; }, 400);
-          if (save && dropTarget) {
-            const names = [...grid.querySelectorAll("[data-service]")].map((item) => item.dataset.service);
-            const moved = button.dataset.service;
-            const destination = dropTarget.dataset.service;
-            names.splice(names.indexOf(moved), 1);
-            names.splice(names.indexOf(destination) + (dropAfter ? 1 : 0), 0, moved);
-            try { saveServiceOrder(names); setTimeout(() => renderTickets(root), 0); }
-            catch { alert("No se pudo guardar el orden de los servicios."); }
-          }
-          dropTarget = null;
-        };
-        const startDrag = (capturePointer) => { dragging = true; button.classList.add("pt-dragging"); grid.classList.add("pt-reordering"); if (capturePointer !== null) button.setPointerCapture(capturePointer); };
-        const updateDropTarget = (x, y) => {
-          const target = document.elementFromPoint(x, y)?.closest("[data-service]");
-          if (target !== dropTarget) dropTarget?.classList.remove("pt-drop-target");
-          dropTarget = target && target !== button && target.parentElement === grid ? target : null;
-          if (dropTarget) { const rect = dropTarget.getBoundingClientRect(); dropAfter = y > rect.top + rect.height / 2; dropTarget.classList.add("pt-drop-target"); }
-        };
-        button.addEventListener("pointerdown", (event) => {
-          if (event.pointerType === "touch" || event.button !== 0 || !event.isPrimary) return;
-          startX = event.clientX; startY = event.clientY;
-          timer = setTimeout(() => startDrag(event.pointerId), 450);
-        });
-        button.addEventListener("pointermove", (event) => {
-          if (event.pointerType === "touch") return;
-          if (!dragging) { if (timer && Math.hypot(event.clientX - startX, event.clientY - startY) > 8) { clearTimeout(timer); timer = null; } return; }
-          event.preventDefault(); updateDropTarget(event.clientX, event.clientY);
-        });
-        button.addEventListener("pointerup", (event) => { if (event.pointerType !== "touch") stop(true); });
-        button.addEventListener("pointercancel", (event) => { if (event.pointerType !== "touch") stop(false); });
-        let touchMoved = false;
-        button.addEventListener("touchstart", (event) => {
-          if (event.touches.length !== 1) return;
-          touchMoved = false; startX = event.touches[0].clientX; startY = event.touches[0].clientY;
-          timer = setTimeout(() => startDrag(null), 450);
-        }, { passive: true });
-        button.addEventListener("touchmove", (event) => {
-          const touch = event.touches[0]; if (!touch) return;
-          if (!dragging) {
-            if (Math.hypot(touch.clientX - startX, touch.clientY - startY) > 8) { touchMoved = true; clearTimeout(timer); timer = null; suppressServiceClickUntil = Date.now() + 400; }
-            return;
-          }
-          event.preventDefault(); updateDropTarget(touch.clientX, touch.clientY);
-        }, { passive: false });
-        button.addEventListener("touchend", () => { if (dragging) stop(true); else { clearTimeout(timer); timer = null; if (touchMoved) suppressServiceClickUntil = Date.now() + 400; } });
-        button.addEventListener("touchcancel", () => { if (dragging) stop(false); else { clearTimeout(timer); timer = null; } });
-      });
       content.querySelectorAll("[data-edit-supplies]").forEach((button) => button.addEventListener("click", () => { const name = button.dataset.editSupplies; openSuppliesPicker(root, selectedTicketSupplies.get(name) || [], (usage) => { selectedTicketSupplies.set(name, usage); renderTickets(root); }); }));
       content.querySelectorAll("[data-edit-price]").forEach((button) => button.addEventListener("click", () => { const name = button.dataset.editPrice; if (overriddenPrices.has(name)) { overriddenPrices.delete(name); selectedTicketServices.set(name, servicePrice(name) ?? ""); } else overriddenPrices.add(name); renderTickets(root); }));
       const withDiscardedDraft = (action) => {
@@ -1678,11 +1739,11 @@ Error generating stack: `+g.message+`
         const openSelectedTicket = () => {
           if (!switchTicketDraft(button.dataset.open)) return;
           const group = openGroups.find((entry) => entry.id === openTicketId);
-          const assigneeCode = group?.lines.find((line) => line.openAssignedWorkerCode)?.openAssignedWorkerCode;
+          const assigneeCode = openAssignees(group?.lines || [])[0]?.code;
           const draft = ticketDrafts.get(openTicketId);
           activeWorker = workers.find((worker) => worker.code === draft?.workerCode) || workers.find((worker) => worker.code === assigneeCode) || [...(group?.lines || [])].reverse().map((line) => workers.find((worker) => worker.code === line.workerCode)).find(Boolean) || workers.find((worker) => worker.code === activeWorker?.code) || workers[0] || null;
           renderTickets(root);
-          root.scrollTop = 0;
+          content.querySelector(".jp-ticket-scroll")?.scrollTo(0, 0);
         };
         button.addEventListener("click", openSelectedTicket);
         button.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openSelectedTicket(); } });
@@ -1759,7 +1820,7 @@ Error generating stack: `+g.message+`
       content.querySelectorAll("[data-delete-ticket]").forEach((button) => button.addEventListener("click", () => {
         deleteService(button.dataset.deleteTicket);
       }));
-      const save = async (keepOpen, selectedOpenWorker = null) => {
+      const save = async (keepOpen, selectedOpenWorkers = []) => {
         if (ticketSaveInFlight) return;
         if (activeGroup) {
           const currentGroup = getTickets().filter(line => line.ticketGroupId === activeGroup.id);
@@ -1769,7 +1830,7 @@ Error generating stack: `+g.message+`
             return;
           }
         }
-        if (keepOpen && !selectedOpenWorker?.code) return alert("Selecciona para quién quedará abierto el ticket.");
+        if (keepOpen && !selectedOpenWorkers.length) return alert("Selecciona para quién quedará abierto el ticket.");
         const currentCustomerName = activeGroup?.customerName || ticketClientName.trim();
         if (!currentCustomerName || (!pendingTicketLines.length && !activeGroup)) return alert("Escribe el nombre del cliente y selecciona al menos un servicio.");
         if (pendingTicketLines.some((line) => line.serviceName === "PRODUCTO" && !String(line.productName || "").trim())) return alert("Escribe el nombre del producto antes de guardar el ticket.");
@@ -1781,7 +1842,7 @@ Error generating stack: `+g.message+`
         const ticketNumber = activeGroup?.ticketNumber ?? nextNumber;
         const paymentMethod = activeGroup?.lines.find((line) => ["cash", "credit_card", "transfer"].includes(line.paymentMethod))?.paymentMethod || null;
         const details = activeGroup ? { customerName: activeGroup.customerName, customerLastName: activeGroup.customerLastName } : { customerName: currentCustomerName, customerLastName: "" };
-        const assignmentFields = keepOpen ? { openAssignedWorkerCode: selectedOpenWorker.code, openAssignedWorkerName: selectedOpenWorker.name, openAssignedWorkerSpecialty: selectedOpenWorker.specialty } : {};
+        const assignmentFields = keepOpen ? { openAssignedWorkers: selectedOpenWorkers.map(({code, name, specialty}) => ({code, name, specialty})), openAssignedWorkerCode: selectedOpenWorkers[0].code, openAssignedWorkerName: selectedOpenWorkers[0].name, openAssignedWorkerSpecialty: selectedOpenWorkers[0].specialty } : {};
         const tickets = getTickets().map((ticket) => ticket.ticketGroupId === groupId ? { ...ticket, ...assignmentFields, ticketStatus: status, ...(status === "finalized" ? { closedAt: now } : {}) } : ticket);
         tickets.push(...pendingTicketLines.map((line) => ({ id: ticketId(), ticketGroupId: groupId, ticketNumber, ticketStatus: status, paymentMethod, createdAt: now, localDate: localDate(), workerCode: line.workerCode, workerName: line.workerName, workerSpecialty: line.workerSpecialty || ticketLineSpecialty(line), serviceName: line.serviceName, productName: line.productName || null, amount: line.amount, supplies: validUsage(line.supplies), ...details, ...assignmentFields, ...(status === "finalized" ? { closedAt: now } : {}) })));
         ticketSaveInFlight = true;
@@ -1796,11 +1857,23 @@ Error generating stack: `+g.message+`
           openTicketId = ""; selectedTicketService = ""; ticketAmount = ""; ticketClientName = ""; ticketClientLastName = "";
           if (keepOpen) ticketScreen = "new";
           renderTickets(root);
+          if (keepOpen) content.querySelector(".pt-open-home")?.scrollIntoView({ block: "center" });
+          else content.querySelector(".jp-ticket-scroll")?.scrollTo(0, 0);
         } catch (error) { alert("No se pudo guardar el ticket: " + error.message); }
         finally { ticketSaveInFlight = false; saveButtons.forEach((button) => { if (button) button.disabled = false; }); }
       };
-      content.querySelector('[data-action="save-open"]').addEventListener("click", () => chooseOpenTicketWorker(root, activeGroup?.lines.find((line) => line.openAssignedWorkerCode)?.openAssignedWorkerCode || "", (worker) => save(true, worker)));
+      content.querySelector('[data-action="save-open"]').addEventListener("click", () => chooseOpenTicketWorker(root, openAssignees(activeGroup?.lines || []).map((worker) => worker.code), (workers) => save(true, workers)));
       content.querySelector('[data-action="finalize"]').addEventListener("click", () => save(false));
+      if (root.dataset.view === "tickets") {
+        const actions = content.querySelector(".pt-ticket-actions");
+        const scroller = document.createElement("div");
+        scroller.className = "jp-ticket-scroll";
+        for (const section of [...content.children]) {
+          if (section !== actions) scroller.append(section);
+        }
+        content.prepend(scroller);
+        scroller.scrollTop = ticketScroll;
+      }
     }
 
     function openEditTicketModal(root, ticketId) {
@@ -1946,4 +2019,69 @@ body.juan-personal #paper-nav-backdrop{z-index:1298!important}
 body.juan-personal #paper-nav-drawer [data-drawer-appearance]{display:none!important}
 body.juan-personal .pt-personal-name{display:block;padding:12px;color:var(--accent,#356451);font-size:16px}
 </style>
-</body></html>
+<style>
+body.juan-personal #paper-tickets {background:var(--canvas);color:var(--text)}
+body.juan-personal #paper-tickets .pt-wrap {max-width:620px;margin:auto;padding:22px 18px calc(var(--juan-nav-height) + 24px)!important}
+body.juan-personal #paper-tickets .pt-client {position:static!important;transform:none!important;background:none;padding:0;margin:0 0 20px!important;border:0}
+.jp-heading {margin:0 0 18px;font-size:16px}
+.jp-heading h1 {font:750 36px/1.15 system-ui;margin:5px 0}
+body.juan-personal #paper-tickets .pt-client-title {text-align:left;font:650 16px/1.3 system-ui}
+body.juan-personal #paper-tickets .pt-client input {text-align:left;background:var(--card);font-size:17px;min-height:48px}
+body.juan-personal #paper-tickets .pt-workbench {height:auto;min-height:0;align-items:stretch}
+body.juan-personal #paper-tickets .pt-value {background:none;border:0;padding:0;min-width:0;gap:12px}
+body.juan-personal #paper-tickets .pt-value>h2 {margin:0;font-size:19px}
+body.juan-personal #paper-tickets .pt-ticket-lines {margin:0;padding:0;border:0}
+body.juan-personal #paper-tickets .pt-ticket-lines>div {background:var(--tint);border-radius:9px;padding:10px;flex-wrap:wrap;font-size:15px}
+body.juan-personal #paper-tickets .pt-services-launcher {background:transparent;border:1.5px solid var(--accent);min-height:48px}
+body.juan-personal #paper-tickets .pt-total {border-top:1px solid var(--line);font-size:18px;margin:0}
+body.juan-personal #paper-tickets .pt-client-title {display:block;width:100%}
+body.juan-personal #paper-tickets[data-view="tickets"] .pt-ticket-actions {display:flex;flex-direction:column;gap:3px}
+body.juan-personal #paper-tickets .pt-ticket-actions>[data-action="finalize"] {order:-1;width:100%!important;min-height:50px;background:var(--accent);color:white;font-size:18px}
+body.juan-personal #paper-tickets [data-action="save-open"] {width:100%;border:0;background:transparent;color:var(--accent)}
+body.juan-personal #paper-tickets .pt-ticket-actions .pt-tabs {display:none}
+body.juan-personal #paper-tickets:has(input[readonly][data-client]) .pt-tabs {display:flex}
+body.juan-personal #paper-tickets .pt-tabs [data-action="open-list"] {display:none}
+body.juan-personal #paper-tickets dialog.pt-picker-open {margin:0;box-sizing:border-box;width:100%;height:100%;height:100dvh;max-width:none;max-height:none;gap:12px;color:var(--text)}
+body.juan-personal #paper-tickets dialog .pt-pane-head {justify-content:flex-start;margin:0}
+body.juan-personal #paper-tickets dialog .pt-pane-head h2 {font:750 28px system-ui}
+body.juan-personal #paper-tickets dialog [data-back] {font-size:30px;border:0;background:none;min-width:44px}
+.jp-search {width:100%;box-sizing:border-box;min-height:48px;border:1px solid var(--line);background:var(--tint);color:var(--text);padding:10px 14px;font-size:17px;border-radius:9px}
+body.juan-personal #paper-tickets dialog.pt-picker-open .pt-service {text-align:left;font-size:15px;overflow-wrap:anywhere;position:relative;padding-right:24px!important;background:var(--card)}
+body.juan-personal #paper-tickets dialog.pt-picker-open .pt-service[aria-pressed="true"] {background:var(--tint);border:2px solid var(--accent)}
+.pt-service[aria-pressed="true"]::after {content:"✓";position:absolute;top:4px;right:6px;color:var(--accent)}
+body.juan-personal #paper-tickets dialog [hidden] {display:none!important}
+body.juan-personal #paper-tickets dialog .jp-done {background:var(--accent);color:white;min-height:50px;font-size:17px}
+body.juan-personal #juan-nav {grid-template-columns:repeat(3,1fr);background:var(--canvas);box-shadow:none}
+body.juan-personal #juan-nav button {display:flex!important;flex-direction:column;gap:3px;border:0!important;color:var(--text)!important}
+body.juan-personal #juan-nav button::before {font:20px/1 system-ui}
+#juan-nav #paper-history-launcher::before {content:"◷"}
+#juan-nav #paper-tickets-launcher::before {content:"▤"}
+#juan-nav #paper-nav-toggle::before {content:"☰"}
+body.juan-personal:has(#paper-tickets[data-view="tickets"]) #juan-nav #paper-tickets-launcher,body.juan-personal.paper-nav-open #juan-nav #paper-nav-toggle,body.juan-personal:has(#paper-tickets[data-view="history"]) #juan-nav #paper-history-launcher {background:var(--tint)!important;color:var(--accent)!important}
+body.juan-personal .salon-app .app-controls {display:none!important}
+body.juan-personal:has(dialog[open]) #juan-local-test-badge {display:none}
+body.juan-personal #paper-tickets[data-view="tickets"] {bottom:var(--juan-nav-height,70px)!important;overflow:hidden}
+body.juan-personal #paper-tickets[data-view="tickets"] .pt-wrap {display:flex;flex-direction:column;height:100%;box-sizing:border-box;padding:0!important}
+.jp-ticket-scroll {flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:16px 18px 8px}
+body.juan-personal #paper-tickets[data-view="tickets"] .pt-ticket-actions {flex:none;margin:0;padding:6px 18px;background:var(--canvas);border-top:1px solid var(--line)}
+body.juan-personal #paper-tickets.dark .primary,body.juan-personal #paper-tickets.dark .jp-done {color:var(--canvas)}
+#paper-nav-drawer .pt-drawer-footer {grid-template-columns:1fr}
+.jp-appearance {display:grid;gap:10px}
+.jp-appearance h2 {font-size:18px;margin:4px 0}
+.jp-appearance fieldset {min-width:0;border:0;margin:0;padding:0}
+.jp-appearance legend {padding:0;margin-bottom:8px}
+.jp-colors {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.jp-appearance button {min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)}
+.jp-colors span {display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px}
+.jp-colors [aria-pressed="true"] {border:2px solid var(--accent);background:var(--tint);font-weight:700}
+#paper-tickets .jp-supply-row {display:grid;grid-template-columns:minmax(0,1fr) 44px 48px 44px;gap:4px;align-items:center;margin:6px 0}
+#paper-tickets .jp-supply-row button,#paper-tickets .jp-supply-row input {width:100%;min-height:44px}
+#paper-tickets .jp-supply-row input {appearance:textfield;padding:4px;text-align:center}
+.jp-supply-row input::-webkit-inner-spin-button,.jp-supply-row input::-webkit-outer-spin-button {-webkit-appearance:none;margin:0}
+body.juan-personal #paper-tickets .pt-product-line > small {grid-column:1 / -1}
+body.juan-personal #paper-tickets .pt-product-line > label {margin:0;padding:0}
+body.juan-personal #paper-tickets .pt-product-line input,
+body.juan-personal #paper-tickets .pt-product-line .pt-product-delete {box-sizing:border-box;height:44px;min-height:44px;margin:0}
+body.juan-personal #paper-tickets .pt-ticket-lines .pt-product-line {grid-template-columns:minmax(0,1fr) minmax(68px,88px) 44px;align-items:end}
+body.juan-personal #paper-tickets .pt-product-line .pt-product-delete {width:44px}
+</style></body></html>

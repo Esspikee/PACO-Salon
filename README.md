@@ -28,10 +28,12 @@ El sistema está pensado para la red local del salón. Las tablets y el PC deben
 | `htmls/auxiliar.html` | Vista auxiliar. |
 | `htmls/manicuristas.html` | Vista especializada de manicuristas. |
 | `htmls/estilistas.html` | Vista especializada de estilistas. |
-| `htmls/juan-pablo.html` | Vista de teléfono de Juan Pablo, vinculada al ID `e69d26e7-d3d7-440e-9117-c71e264a1d70`. |
+| `htmls/juan-pablo-2.0.html` | Vista de teléfono de Juan Pablo, vinculada al ID `e69d26e7-d3d7-440e-9117-c71e264a1d70`. |
+| `htmls/william.html` | Vista de teléfono de William, vinculada al ID `63421b4b-e733-4199-b45e-b7f0e24a3dbc`. |
 | `htmls/josepp-watermark.png` | Versión ligera del logo usada como marca de agua detrás de los nombres de empleados. |
 | `data/tablero.json` | Estado real del tablero y del equipo. **Datos de producción.** |
 | `data/tickets.json` | Líneas de tickets, consecutivo y ajustes compartidos. **Datos de producción.** |
+| `backups/` | Copias automáticas del tablero, tickets, ajustes y código del proyecto. **Datos de producción; no se sube a Git.** |
 | `initial-team.json` | Semilla del equipo, usada solo si no existe `data/tablero.json`. |
 | `runtime/node.exe` | Node.js portátil incluido para Windows. |
 | `INICIAR SERVIDOR.bat` | Busca Node.js, inicia el servidor y abre `/main`. |
@@ -90,6 +92,12 @@ Una **reserva DHCP** para el PC en el router evita que estos favoritos cambien c
 - El historial de Deshacer está en memoria: reiniciar el servidor conserva los datos guardados, pero vacía ese historial.
 
 El servidor escribe el JSON mediante archivo temporal y renombrado (con alternativa para errores de permisos de Windows). Las mutaciones se procesan en secuencia.
+
+### Respaldos automáticos
+
+Al iniciar, el servidor crea una copia inmediata. Mientras siga abierto, crea otra cada **30 minutos** en `backups/<fecha UTC>-<identificador>/`. Cada carpeta contiene `tablero.json` (equipo y fila), `tickets.json` (tickets, consecutivo, servicios, precios y demás ajustes), `manifest.json` y `source.tar.gz` (HTML, servidor, scripts y documentación). No se incluyen `.git` ni `runtime`, que son componentes estáticos. Las copias se conservan sin borrado automático, así que conviene vigilar el espacio disponible.
+
+Además, antes de reemplazar cada archivo JSON activo, el servidor conserva la versión anterior en `data/tablero.json.bak` o `data/tickets.json.bak`. Si un archivo activo se daña, el servidor intenta cargar esa copia y lo anuncia en la consola. Para restaurar una copia fechada: detener el servidor, copiar `tablero.json` y `tickets.json` de la misma carpeta de respaldo a `data/`, y volver a iniciarlo. Conservar antes los archivos que se van a reemplazar.
 
 ### Tickets y ajustes
 
