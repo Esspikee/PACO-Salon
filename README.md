@@ -104,7 +104,7 @@ Además, antes de reemplazar cada archivo JSON activo, el servidor conserva la v
 `data/tickets.json` contiene `tickets` (líneas), `nextTicketNumber` y `settings`. Las líneas del mismo ticket comparten `ticketGroupId` y `ticketNumber`. El servidor asigna el consecutivo del grupo y conserva campos adicionales como `productName`, `supplies`, `paymentMethod`, `enteredAt` y `ticketStatus`. El valor `amount` debe ser un entero entre 0 y 10.000.000 COP.
 
 - `GET /ticket-state` entrega tickets, consecutivo y ajustes.
-- `POST /ticket-state` acepta `action: "changes"` o `"migrate"`, `upsert`, `deleteIds` y `settings`. Las escrituras también se serializan.
+- `POST /ticket-state` acepta cambios, migración y `action: "set-next-number"` para fijar el número del próximo ticket nuevo. Las escrituras también se serializan.
 - Si dos tablets escriben sobre el mismo ticket casi a la vez, el servidor aplica el último cambio de estado y responsable a **todas** las líneas del grupo. Esto evita que un mismo ticket quede parcialmente abierto y parcialmente finalizado.
 - `GET /ticket-storage.js` entrega el adaptador sin caché.
 - Al servir una vista HTML, `server.mjs` **inyecta** `ticket-storage.js` en el marcador exacto `/* Tickets locales compartidos por las cuatro pantallas HTML. */`. La vista personal conserva el mismo marcador. **No eliminar ni cambiar ese marcador sin adaptar el servidor.**
@@ -130,6 +130,7 @@ Dentro de `salon-service-specialties-v1` también se guardan `__requiresSupplies
 
 - En `main` y `auxiliar`, el botón «Historial de ticket» aparece entre las dos tarjetas de disponibles y abre directamente el historial. En `manicuristas` y `estilistas`, el botón «ticket» queda debajo del nombre disponible y abre Tickets. Desde otras secciones, cada botón conserva su destino y flota al centro de la parte inferior; se oculta mientras hay un menú lateral o una confirmación modal abierta.
 - Si una vista distinta de Tablero permanece sin interacción, vuelve a Tablero después de **30 segundos** por defecto. En Menú → Apariencia → «Volver al tablero tras inactividad» se puede elegir 15, 30, 45, 60, 120 o 300 segundos. La selección se guarda en el servidor y se comparte entre las cuatro tablets.
+- En Menú → Apariencia → «Próximo número de ticket» se introduce el número impreso en el siguiente papel y se pulsa «Guardar número». El servidor asigna ese número al siguiente ticket nuevo y continúa consecutivamente. Los tickets ya guardados conservan su número, incluso si se reinicia la numeración; por ello pueden existir números repetidos en el historial.
 
 ### Equipo, servicios y precios
 
@@ -150,7 +151,7 @@ Dentro de `salon-service-specialties-v1` también se guardan `__requiresSupplies
 - Al pulsar **Nuevo ticket**, un diálogo pide el nombre del cliente. Si alguien intenta añadir el primer servicio sin nombre, aparece el mismo diálogo y el servicio se añade después de confirmar. Cancelar no guarda ni añade el servicio. Esto funciona en las cuatro vistas generales y la vista de Juan Pablo; no interrumpe la edición de un ticket abierto.
 - Al pulsar **Dejar ticket abierto**, la tablet espera la confirmación del servidor. Tras guardarlo, el ticket aparece en la lista compartida de abiertos y el formulario vuelve a un ticket nuevo: se limpian cliente, líneas de servicio y valores, pero se conserva el trabajador seleccionado para que el catálogo de servicios permanezca visible. Si falla el guardado, se conserva el formulario para reintentar y se muestra el error. Esto también ocurre al volver a guardar un ticket abierto que se retomó para añadir servicios.
 - Antes de dejarlo abierto aparece un diálogo para elegir **a quién queda asignado**. Presenta estilistas a la izquierda y manicuristas a la derecha en las cuatro tablets, y exige seleccionar una persona. El nombre se muestra encima del mini recibo abierto y se guarda en el servidor junto con cada línea; al volver a guardar el ticket se puede cambiar la asignación **sin añadir otro servicio**. Los tickets abiertos creados antes de esta función muestran «Sin asignar» hasta que se guarden de nuevo.
-- Los tickets abiertos y finalizados se presentan como mini recibos horizontales de aproximadamente 286 px, con desplazamiento lateral. Su tipografía se amplió un nivel sin cambiar la del formulario ni otras secciones. Cada uno muestra nombre del cliente como título, consecutivo, servicios, total y fecha corta **DD/MM**.
+- Los tickets abiertos y finalizados se presentan como mini recibos horizontales de aproximadamente 238 px, con desplazamiento lateral. Los abiertos aparecen del más nuevo a la izquierda al más antiguo a la derecha. Cada uno muestra nombre del cliente como título, consecutivo, servicios, total y fecha corta **DD/MM**.
 - En la vista **main**, “Historial de tickets” tiene dos secciones: **Tickets abiertos** y **Tickets finalizados**. Todos los finalizados aparecen juntos, independientemente de si están marcados como “Ingresado”. Las secciones se pueden expandir o contraer; los abiertos también siguen visibles en la vista de Tickets.
 - Tocar un ticket finalizado abre una confirmación para **reabrirlo**. Una pulsación larga sobre un ticket permite confirmar su eliminación; el gesto se cancela si se está desplazando.
 - “Ingresado” se marca en tickets finalizados mediante su confirmación. La forma de pago se selecciona en cada recibo del historial: **💵 efectivo, 💳 tarjeta de crédito, 🏦 transferencia**; las opciones conservan etiquetas accesibles.
@@ -175,7 +176,7 @@ Dentro de `salon-service-specialties-v1` también se guardan `__requiresSupplies
 | `GET /events` | Eventos SSE del tablero. |
 | `GET /backup` | Copia del tablero/equipo. |
 | `GET /ticket-state` | Tickets y ajustes compartidos. |
-| `POST /ticket-state` | Cambios o migración de tickets y ajustes. |
+| `POST /ticket-state` | Cambios, migración y configuración del próximo número de ticket. |
 | `GET /ticket-storage.js` | Adaptador de sincronización del navegador. |
 | `GET /josepp-watermark.png` | Logo ligero para las marcas de agua. |
 | `GET /`, `/main`, `/auxiliar`, `/manicuristas`, `/estilistas` | Vistas HTML. |

@@ -87,6 +87,7 @@
   const save = (body, removedTickets = []) => {
     const generation = saveGeneration;
     const keys = new Set(Object.keys(body.settings).map(key => 'setting:' + key));
+    if (body.action === 'set-next-number') keys.add('counter:nextTicketNumber');
     for (const ticket of [...body.upsert, ...removedTickets]) {
       keys.add('group:' + ticket.ticketGroupId);
     }
@@ -124,6 +125,11 @@
   };
   window.salonTicketStorage = {
     get ready() {return ensureReady();},
+    setNextTicketNumber(number) {
+      if (!Number.isSafeInteger(number) || number < 0 || number > 999_999_999) throw new Error('Número de ticket inválido.');
+      state = {...state, nextTicketNumber: number};
+      return save({action: 'set-next-number', nextTicketNumber: number, upsert: [], deleteIds: [], settings: {}});
+    },
     confirmedTicketGroup(id) {
       return {
         revision: confirmedState.revisions?.['group:' + id] || 0,

@@ -283,11 +283,13 @@ export async function createSalonServer(options = {}) {
     ticketState = next
   }
   const updateTickets = async body => {
-    if (!body || !['changes', 'migrate'].includes(body.action) || !Array.isArray(body.upsert) || body.upsert.length > 500 || !Array.isArray(body.deleteIds) || body.deleteIds.length > 500 || !body.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) throw new HttpError(400, 'Cambio de tickets inválido.')
+    if (!body || !['changes', 'migrate', 'set-next-number'].includes(body.action) || !Array.isArray(body.upsert) || body.upsert.length > 500 || !Array.isArray(body.deleteIds) || body.deleteIds.length > 500 || !body.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) throw new HttpError(400, 'Cambio de tickets inválido.')
+    if (body.action === 'set-next-number' && (!Number.isSafeInteger(body.nextTicketNumber) || body.nextTicketNumber < 0 || body.nextTicketNumber > 999_999_999 || body.upsert.length || body.deleteIds.length || Object.keys(body.settings).length)) throw new HttpError(400, 'Número de ticket inválido.')
     if (body.activity !== undefined && (body.action !== 'changes' || !body.activity || !['open', 'finalized'].includes(body.activity.status) || typeof body.activity.workerName !== 'string' || !body.activity.workerName.trim() || body.activity.workerName.length > 80 || typeof body.activity.groupId !== 'string' || !body.upsert.some(ticket => ticket?.ticketGroupId === body.activity.groupId && ticket.ticketStatus === body.activity.status))) throw new HttpError(400, 'Actividad de ticket inválida.')
     const next = ticketSnapshot()
     const byId = new Map(next.tickets.map(ticket => [ticket.id, ticket]))
     const touched = new Set(Object.keys(body.settings).map(key => 'setting:' + key))
+    if (body.action === 'set-next-number') touched.add('counter:nextTicketNumber')
     const revisions = next.revisions ||= {}
     if (body.operationId !== undefined && (typeof body.operationId !== 'string' || !body.operationId || body.operationId.length > 100)) throw new HttpError(400, 'Identificador de operación inválido.')
     if (body.expected !== undefined) {
@@ -311,6 +313,7 @@ export async function createSalonServer(options = {}) {
       let number = groupNumbers.get(copy.ticketGroupId)
       if (number === undefined) {
         number = next.nextTicketNumber++
+        touched.add('counter:nextTicketNumber')
         groupNumbers.set(copy.ticketGroupId, number)
       }
       copy.ticketNumber = number
@@ -353,6 +356,7 @@ export async function createSalonServer(options = {}) {
       }
     }
     next.tickets = [...byId.values()]
+    if (body.action === 'set-next-number') next.nextTicketNumber = body.nextTicketNumber
     for (const [key, value] of Object.entries(body.settings)) {
       if (!ticketSettings.has(key) || typeof value !== 'string' || value.length > 100_000) throw new HttpError(400, 'Ajuste de tickets inválido.')
       try {JSON.parse(value)} catch {throw new HttpError(400, 'Ajuste de tickets inválido.')}

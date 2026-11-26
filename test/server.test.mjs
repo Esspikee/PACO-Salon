@@ -31,22 +31,26 @@ const close = server => new Promise(resolve => {
   server.closeAllConnections?.()
 })
 
-test('open tickets display oldest first in every view, even after adding services', async () => {
+test('open tickets display newest first in every view, even after adding services', async () => {
   const lines = [
     {ticketGroupId: 'new', ticketNumber: 3, ticketStatus: 'open', createdAt: '2026-11-20T10:00:00.000Z'},
     {ticketGroupId: 'old', ticketNumber: 1, ticketStatus: 'open', createdAt: '2026-11-18T10:00:00.000Z'},
     {ticketGroupId: 'middle', ticketNumber: 2, ticketStatus: 'open', createdAt: '2026-11-19T10:00:00.000Z'},
     {ticketGroupId: 'old', ticketNumber: 1, ticketStatus: 'open', createdAt: '2026-11-21T10:00:00.000Z'}
   ]
-  for (const name of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0']) {
+  for (const name of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0', 'william']) {
     const html = await readFile(path.join(root, 'htmls', `${name}.html`), 'utf8')
     const start = html.indexOf('      const groups = new Map();', html.indexOf('const historyScroll ='))
     const end = html.indexOf('      let activeGroup =', start)
     assert.ok(start >= 0 && end > start, `open ticket grouping exists in ${name}`)
     const context = {allTickets: lines, ticketGroupVisible: () => true}
     runInNewContext(html.slice(start, end) + '\nglobalThis.result = openGroups;', context)
-    assert.deepEqual(Array.from(context.result, group => group.id), ['old', 'middle', 'new'], name)
-    assert.equal(context.result[0].createdAt, '2026-11-18T10:00:00.000Z', name)
+    assert.deepEqual(Array.from(context.result, group => group.id), ['new', 'middle', 'old'], name)
+    assert.equal(context.result.at(-1).createdAt, '2026-11-18T10:00:00.000Z', name)
+    assert.match(html, /#paper-tickets \.pt-open ul\.pt-receipt-strip\{display:flex;flex-wrap:nowrap;[^}]*overflow-x:auto;/, `${name}: open tickets scroll horizontally`)
+    assert.match(html, /#paper-tickets \.pt-history-section \.pt-history-ticket,#paper-tickets \.pt-open \.pt-history-ticket\{[^}]*flex:0 0 min\(238px,calc\(100vw - 84px\)\)/, `${name}: receipts stay compact`)
+    assert.doesNotMatch(html, /ticketScreen === "open" \? `<section class="pt-open"/, `${name}: no duplicate open list at the top`)
+    assert.match(html, /content\.querySelector\("\.pt-history"\)\.insertAdjacentHTML\("beforebegin", `<section class="pt-open pt-open-home"/, `${name}: open list stays below the ticket form`)
   }
 })
 
@@ -90,7 +94,7 @@ test('serves the four views with server connectivity enabled', async t => {
     assert.doesNotMatch(html, /Selecciona la forma de pago antes de finalizar/)
     assert.match(html, /data-ticket-group="\$\{esc\(group\.id\)\}"/)
     assert.match(html, /class="pt-receipt pt-open-receipt" role="button" tabindex="0" data-open="\$\{esc\(group\.id\)\}" data-ticket-group=/)
-    assert.match(html, /\.pt-open-home ul\.pt-receipt-strip/)
+    assert.match(html, /\.pt-open ul\.pt-receipt-strip/)
     assert.match(html, /\.pt-client\{width:min\(540px,100%\);margin-top:0;transform:none\}/)
     assert.match(html, /#paper-nav-drawer\{[^}]*width:25vw/)
     assert.match(html, /#paper-nav-toggle\{position:fixed;top:50%;left:6px;z-index:1295;width:38px/)
@@ -164,7 +168,8 @@ test('serves the four views with server connectivity enabled', async t => {
     assert.match(html, /function runDrawerMenuAction\(label\)/)
     assert.match(html, /hiddenMenu\?\.style\.setProperty\("display", "block", "important"\)/)
     assert.match(html, /appearanceSource\.open = !appearanceSource\.open/)
-    assert.match(html, /const visiblePriceServices = getAllServices\(\)\.filter\(\(name\) => name !== "PRODUCTO"\)/)
+    assert.match(html, /const visible = getAllServices\(\)/)
+    assert.match(html, /class="pt-service-order"/)
     assert.match(html, /const SERVICE_ROLES = \[\["MANICURISTA", "Manicuristas"\], \["ESTILISTA", "Estilistas"\], \["AUXILIAR", "Auxiliar"\]\]/)
     assert.match(html, /class="pt-price-column"/)
     assert.match(html, /type="checkbox" name="\\?\$\{esc\(name\)\}" value="\\?\$\{role\}\"/)
@@ -641,6 +646,33 @@ test('concurrent ticket changes keep status and assignment consistent across the
   assert.equal(invalid.status, 400)
 })
 
+test('the server starts new tickets at the configured paper number and preserves existing numbers', async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-ticket-counter-test-'))
+  t.after(() => rm(directory, {recursive: true, force: true}))
+  const {server, url} = await launch(directory)
+  t.after(() => close(server))
+  const post = async body => fetch(url + '/ticket-state', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)})
+  const setNumber = number => ({action: 'set-next-number', nextTicketNumber: number, upsert: [], deleteIds: [], settings: {}})
+  assert.equal((await post(setNumber(-1))).status, 400)
+  assert.equal((await post(setNumber(1.5))).status, 400)
+  const configured = await post(setNumber(450))
+  assert.equal(configured.status, 200)
+  assert.equal((await configured.json()).nextTicketNumber, 450)
+  const line = (id, group) => ({id, ticketGroupId: group, workerName: 'Ana', serviceName: 'CORTE', amount: 20000, ticketStatus: 'open'})
+  const first = await post({action: 'changes', upsert: [line('a', 'first')], deleteIds: [], settings: {}})
+  assert.equal(first.status, 200)
+  assert.equal((await first.json()).tickets[0].ticketNumber, 450)
+  const reset = await post(setNumber(12))
+  assert.equal(reset.status, 200)
+  const second = await post({action: 'changes', upsert: [line('b', 'second')], deleteIds: [], settings: {}})
+  assert.equal(second.status, 200)
+  const state = await second.json()
+  assert.deepEqual(state.tickets.map(ticket => ticket.ticketNumber), [450, 12])
+  assert.equal(state.nextTicketNumber, 13)
+  const stored = JSON.parse(await readFile(path.join(directory, 'tickets.json'), 'utf8'))
+  assert.equal(stored.nextTicketNumber, 13)
+})
+
 test('tablet ticket storage imports local history and refreshes another tablet', async t => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'josepp-tablets-test-'))
   t.after(() => rm(directory, {recursive: true, force: true}))
@@ -903,11 +935,55 @@ test('Main and Auxiliary history shortcut opens History while the menu Tickets b
   assert.deepEqual(openedViews, ['history', 'history'])
   for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
     const page = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
-    assert.match(page, view === 'main' || view === 'auxiliar' ? /ticketFab\.addEventListener\("click", showHistory\)/ : /ticketFab\.addEventListener\("click", showTickets\)/, view)
+    if (view === 'main' || view === 'auxiliar') assert.match(page, /ticketFab\.addEventListener\("click", showHistory\)/, view)
     if (view === 'main' || view === 'auxiliar') assert.match(page, /ticketFab\.textContent = "Historial de ticket"/, view)
     assert.match(page, /#paper-ticket-fab\{position:fixed;left:50%;bottom:/, view)
   }
   assert.match(html, /renderTickets\(root\);\s*if \(promptForCustomer[^\n]+requestTicketCustomer\(root\);\s*document\.querySelector\("#paper-prices \[data-close\]"\)\?\.click\(\);\s*syncPageScrollLock\(\);\s*root\.workerRefreshTimer/)
+})
+
+test('the board ticket button on specialist tablets starts a new ticket above open tickets', async () => {
+  for (const view of ['manicuristas', 'estilistas']) {
+    const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
+    const start = html.indexOf('    ticketFab.addEventListener("click", async () => {')
+    const end = html.indexOf('    historyLauncher.id =', start)
+    assert.ok(start > 0 && end > start, view)
+    let clickTicket
+    let newTicketClicked = false
+    let openedView
+    const context = {
+      ticketScreen: 'open',
+      ticketFab: {addEventListener: (_event, handler) => {clickTicket = handler}},
+      openTickets: async viewName => {openedView = viewName},
+      document: {querySelector: selector => selector === '#paper-tickets [data-action="new"]' ? {click: () => {newTicketClicked = true}} : null}
+    }
+    runInNewContext(html.slice(start, end), context)
+    await clickTicket()
+    assert.equal(context.ticketScreen, 'new', view)
+    assert.equal(openedView, 'tickets', view)
+    assert.equal(newTicketClicked, true, view)
+  }
+})
+
+test('the board Tickets abiertos button jumps to the existing lower receipt strip', async () => {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
+    const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
+    const start = html.indexOf('    openTicketsButton.addEventListener("click", async () => {')
+    const end = html.indexOf('    boardTicketActions.append(', start)
+    assert.ok(start > 0 && end > start, view)
+    let click
+    let opened
+    let scrolled = false
+    const context = {
+      openTicketsButton: {addEventListener: (_event, handler) => {click = handler}},
+      openTickets: async destination => {opened = destination},
+      document: {querySelector: selector => selector === '#paper-tickets .pt-open-home' ? {scrollIntoView: () => {scrolled = true}} : null}
+    }
+    runInNewContext(html.slice(start, end), context)
+    await click()
+    assert.equal(opened, 'tickets', view)
+    assert.equal(scrolled, true, view)
+  }
 })
 
 test('ticket shortcut sits between two available cards or below the single available name', async () => {
@@ -1022,6 +1098,44 @@ test('leaving a ticket open clears the customer and lines but keeps the selected
   }
 })
 
+test('leaving any ticket open asks for assignees and preselects its existing people', async () => {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0', 'william']) {
+    const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
+    const start = html.indexOf('      content.querySelector(\'[data-action="save-open"]\').addEventListener("click", () => {')
+    const end = html.indexOf('      content.querySelector(\'[data-action="finalize"]\')', start)
+    assert.ok(start > 0 && end > start, view)
+    let click
+    const dialogs = []
+    const saved = []
+    const people = [{code: 'E1', name: 'Ana', specialty: 'ESTILISTA'}, {code: 'M1', name: 'Paola', specialty: 'MANICURISTA'}]
+    const context = {
+      activeGroup: null,
+      content: {querySelector: () => ({addEventListener: (_event, handler) => {click = handler}})},
+      openAssignees: lines => lines[0]?.openAssignedWorkers || [],
+      getWorkers: () => people,
+      chooseOpenTicketWorker: (_root, codes, onSelect) => {dialogs.push(Array.from(codes)); onSelect([people[0]])},
+      save: (keepOpen, assigned) => saved.push({keepOpen, codes: assigned.map(worker => worker.code)}),
+      root: {}
+    }
+    runInNewContext(html.slice(start, end), context)
+    click()
+    assert.equal(dialogs.length, 1, `${view}: new ticket asks for assignment`)
+    context.activeGroup = {lines: [{openAssignedWorkers: people}]}
+    click()
+    assert.equal(dialogs.length, 2, `${view}: ticket assigned to two people asks again`)
+    assert.deepEqual(dialogs[1], ['E1', 'M1'], `${view}: both people are preselected`)
+    assert.deepEqual(saved[1].codes, ['E1'], `${view}: selected person is saved`)
+    context.activeGroup = {lines: [{openAssignedWorkers: [people[0]]}]}
+    click()
+    assert.equal(dialogs.length, 3, `${view}: one-person ticket asks again`)
+    assert.deepEqual(dialogs[2], ['E1'], `${view}: existing person is preselected`)
+    assert.deepEqual(saved[2].codes, ['E1'], `${view}: selected person persists`)
+    context.activeGroup = {lines: [{}]}
+    click()
+    assert.equal(dialogs.length, 4, `${view}: unassigned legacy ticket asks for assignment`)
+  }
+})
+
 test('reopening a cross-specialty ticket selects its assigned worker on the receiving tablet', async () => {
   for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
     const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
@@ -1131,6 +1245,55 @@ test('service order persists and keeps PRODUCTO available', async () => {
   context.reorder(['PRODUCTO', 'CORTE', 'MANICURE'])
   assert.deepEqual(Array.from(context.catalog()), ['PRODUCTO', 'CORTE', 'MANICURE'])
   assert.deepEqual(JSON.parse(settings.get('specialties')).__serviceOrder, ['PRODUCTO', 'CORTE', 'MANICURE'])
+})
+
+test('each view keeps the server ticket counter and existing paper numbers', async () => {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0', 'william']) {
+    const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
+    assert.match(html, /data-next-ticket-input/, view)
+    assert.match(html, /localStorage\.setNextTicketNumber\(number\)/, view)
+    const start = html.indexOf('    const getTickets = () => {')
+    const end = html.indexOf('    const saveTickets =', start)
+    assert.ok(start > 0 && end > start, view)
+    const lines = [
+      {id: 'a', ticketGroupId: 'first', ticketNumber: 450, createdAt: '2026-11-17T10:00:00.000Z'},
+      {id: 'b', ticketGroupId: 'second', ticketNumber: 12, createdAt: '2026-11-18T10:00:00.000Z'}
+    ]
+    const context = {
+      PAPER_TICKETS_KEY: 'tickets', NEXT_TICKET_KEY: 'next', nextTicketNumber: () => 13,
+      localStorage: {getItem: key => key === 'tickets' ? JSON.stringify(lines) : '13', setItem: () => {throw Error('Existing numbers must not change')}}
+    }
+    runInNewContext(html.slice(start, end) + '\nglobalThis.readTickets = getTickets;', context)
+    assert.deepEqual(Array.from(context.readTickets(), ticket => ticket.ticketNumber), [450, 12], view)
+  }
+})
+
+test('service position numbers set the left-to-right ticket order in every view', async () => {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas', 'juan-pablo-2.0', 'william']) {
+    const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
+    const start = html.indexOf('        const currentOrder = getAllServices();')
+    const end = html.indexOf('        specialties.__requiresSupplies = requirements;', start)
+    assert.ok(start > 0 && end > start, view)
+    const names = ['CORTE', 'COLOR', 'PRODUCTO']
+    const requested = new Map(names.map((name, index) => [`order:${name}`, String(index + 1)]))
+    const run = () => {
+      const context = {
+        form: {get: name => requested.get(name) ?? '', getAll: () => ['ESTILISTA']},
+        getAllServices: () => names, validServiceRoles: roles => roles,
+        priceNumber: value => Number(value), updated: {}, specialties: {}, requirements: {},
+        alert: message => {throw Error(message)}
+      }
+      runInNewContext('(function () {\n' + html.slice(start, end) + '\nglobalThis.order = specialties.__serviceOrder;\n})()', context)
+      return Array.from(context.order)
+    }
+    requested.set('order:PRODUCTO', '1')
+    assert.deepEqual(run(), ['PRODUCTO', 'CORTE', 'COLOR'], view)
+    requested.set('order:PRODUCTO', '3')
+    requested.set('order:CORTE', '3')
+    assert.deepEqual(run(), ['COLOR', 'PRODUCTO', 'CORTE'], view)
+    requested.set('order:CORTE', '0')
+    assert.throws(run, /Orden inválido/, view)
+  }
 })
 
 test('holding a board card and dragging it reorders without rotating on release', async () => {
@@ -1408,6 +1571,86 @@ test('swiping over services scrolls without starting a drag or selecting', async
   assert.ok(context.suppressServiceClickUntil > 100)
 })
 
+test('tablet ticket services move to the held drop position', async () => {
+  for (const view of ['main', 'auxiliar', 'manicuristas', 'estilistas']) {
+    const html = (await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')).replace(/\r\n/g, '\n')
+    const start = html.indexOf('      content.querySelectorAll("[data-service]").forEach((button) => {\n        let timer')
+    const end = html.indexOf('      content.querySelectorAll("[data-edit-supplies]")', start)
+    assert.ok(start > 0 && end > start, view)
+    const handlers = new Map()
+    const items = ['CORTE', 'COLOR', 'PRODUCTO'].map(service => ({dataset: {service}, classList: {add() {}, remove() {}}, parentElement: null}))
+    const grid = {classList: {add() {}, remove() {}}, querySelectorAll: () => items}
+    items.forEach(item => {item.parentElement = grid})
+    items[0].addEventListener = (event, handler) => handlers.set(event, handler)
+    let timer
+    let saved
+    const context = {
+      content: {querySelectorAll: () => [items[0]]}, Date: {now: () => 100}, suppressServiceClickUntil: 0,
+      setTimeout: callback => {timer = callback; return 1}, clearTimeout() {},
+      document: {elementFromPoint: () => ({closest: () => items[2]})},
+      saveServiceOrder: names => {saved = Array.from(names)}, renderTickets() {}, root: {}, alert: message => {throw Error(message)}
+    }
+    items[2].getBoundingClientRect = () => ({top: 0, height: 100})
+    runInNewContext(html.slice(start, end), context)
+    const touch = (x, y) => ({touches: [{clientX: x, clientY: y}], preventDefault() {}})
+    handlers.get('touchstart')(touch(10, 10))
+    timer()
+    handlers.get('touchmove')(touch(10, 90))
+    handlers.get('touchend')()
+    assert.deepEqual(saved, ['COLOR', 'PRODUCTO', 'CORTE'], view)
+  }
+})
+
+test('phone ticket service picker reorders on a hold and drag without turning a swipe into a reorder', async () => {
+  for (const view of ['juan-pablo-2.0', 'william']) {
+    const html = await readFile(path.join(root, 'htmls', `${view}.html`), 'utf8')
+    const start = html.indexOf('      tiles.forEach((button) => {')
+    const end = html.indexOf('      servicesLauncher.addEventListener("click",', start)
+    assert.ok(start > 0 && end > start, view)
+    const handlers = new Map()
+    const items = ['CORTE', 'COLOR', 'PRODUCTO'].map(service => ({
+      dataset: {service}, classList: {add() {}, remove() {}},
+      addEventListener(event, handler) {this.handlers.set(event, handler)},
+      handlers: new Map(), getBoundingClientRect: () => ({top: 0, height: 100}),
+      closest: () => null
+    }))
+    const grid = {
+      classList: {add() {}, remove() {}},
+      querySelectorAll: () => items,
+      insertBefore(item, before) {
+        items.splice(items.indexOf(item), 1)
+        items.splice(before ? items.indexOf(before) : items.length, 0, item)
+      }
+    }
+    items.forEach(item => {item.parentElement = grid})
+    Object.defineProperty(items[2], 'nextSibling', {get: () => items[items.indexOf(items[2]) + 1] || null})
+    const timers = []
+    let saved = []
+    let prevented = false
+    const context = {
+      tiles: items, Date: {now: () => 100}, suppressServiceClickUntil: 0,
+      setTimeout: callback => {timers.push(callback); return timers.length}, clearTimeout() {},
+      document: {elementFromPoint: () => ({closest: () => items[2]})},
+      saveServiceOrder: names => {saved = Array.from(names)}, alert: message => {throw Error(message)}
+    }
+    runInNewContext(html.slice(start, end), context)
+    const touch = (x, y) => ({touches: [{clientX: x, clientY: y}], preventDefault: () => {prevented = true}})
+    items[0].handlers.get('touchstart')(touch(10, 10))
+    timers[0]()
+    items[0].handlers.get('touchmove')(touch(10, 90))
+    items[0].handlers.get('touchend')()
+    assert.equal(prevented, true, view)
+    assert.deepEqual(saved, ['COLOR', 'PRODUCTO', 'CORTE'], view)
+    saved = []
+    prevented = false
+    items[1].handlers.get('touchstart')(touch(10, 10))
+    items[1].handlers.get('touchmove')(touch(10, 40))
+    items[1].handlers.get('touchend')()
+    assert.equal(prevented, false, view)
+    assert.deepEqual(saved, [], view)
+  }
+})
+
 test('background ticket updates keep a focused price field mounted', async () => {
   const html = await readFile(path.join(root, 'htmls', 'main.html'), 'utf8')
   const start = html.indexOf('    function refreshTicketView(root)')
@@ -1492,6 +1735,7 @@ test('inactive non-board views return to Tablero after the selected time, defaul
   const handlers = new Map()
   const context = {
     Date: {now: () => now},
+    style: {textContent: ''},
     localStorage: {ready: Promise.resolve(), setItem: async () => true},
     getServiceSpecialties: () => ({__boardIdleSeconds: selectedSeconds}),
     document: {

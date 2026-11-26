@@ -108,9 +108,9 @@ Error generating stack: `+g.message+`
     style.textContent += `#paper-tickets .pt-history-day{margin:14px 0 18px}#paper-tickets .pt-history-day h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--accent);font-size:16px}#paper-tickets .pt-history-day h3 span{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:var(--tint);font-size:12px}`;
     const historyCardStyle = document.createElement("style");
     historyCardStyle.textContent = `
-      #paper-tickets .pt-history-section ul.pt-receipt-strip,#paper-tickets .pt-open-home ul.pt-receipt-strip{display:flex;gap:14px;min-width:0;margin:8px 0 14px;padding:5px 4px 18px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-color:var(--line) transparent;list-style:none}
-      #paper-tickets .pt-history-section .pt-history-ticket,#paper-tickets .pt-open-home .pt-history-ticket{display:block!important;flex:0 0 min(286px,calc(100vw - 48px));min-width:0;margin:0;padding:0!important;border:0!important;border-radius:0;background:transparent;overflow:visible;scroll-snap-align:start;filter:drop-shadow(0 4px 7px #0002)}
-      #paper-tickets .pt-history-section .pt-receipt,#paper-tickets .pt-open-home .pt-receipt{display:flex;flex-direction:column;min-height:325px;padding:18px 17px 28px;background:var(--card);color:var(--text);clip-path:polygon(0 0,100% 0,100% 97%,97% 100%,94% 97%,91% 100%,88% 97%,85% 100%,82% 97%,79% 100%,76% 97%,73% 100%,70% 97%,67% 100%,64% 97%,61% 100%,58% 97%,55% 100%,52% 97%,49% 100%,46% 97%,43% 100%,40% 97%,37% 100%,34% 97%,31% 100%,28% 97%,25% 100%,22% 97%,19% 100%,16% 97%,13% 100%,10% 97%,7% 100%,4% 97%,0 100%);touch-action:auto}
+      #paper-tickets .pt-history-section ul.pt-receipt-strip,#paper-tickets .pt-open ul.pt-receipt-strip{display:flex;flex-wrap:nowrap;gap:14px;width:100%;max-width:100%;min-width:0;direction:ltr;margin:8px 0 14px;padding:5px 4px 18px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-color:var(--line) transparent;list-style:none}
+      #paper-tickets .pt-history-section .pt-history-ticket,#paper-tickets .pt-open .pt-history-ticket{display:block!important;flex:0 0 min(238px,calc(100vw - 84px));min-width:0;margin:0;padding:0!important;border:0!important;border-radius:0;background:transparent;overflow:visible;scroll-snap-align:start;filter:drop-shadow(0 4px 7px #0002)}
+      #paper-tickets .pt-history-section .pt-receipt,#paper-tickets .pt-open .pt-receipt{display:flex;flex-direction:column;min-height:285px;padding:15px 14px 24px;background:var(--card);color:var(--text);clip-path:polygon(0 0,100% 0,100% 97%,97% 100%,94% 97%,91% 100%,88% 97%,85% 100%,82% 97%,79% 100%,76% 97%,73% 100%,70% 97%,67% 100%,64% 97%,61% 100%,58% 97%,55% 100%,52% 97%,49% 100%,46% 97%,43% 100%,40% 97%,37% 100%,34% 97%,31% 100%,28% 97%,25% 100%,22% 97%,19% 100%,16% 97%,13% 100%,10% 97%,7% 100%,4% 97%,0 100%);touch-action:auto}
       #paper-tickets .pt-receipt-customer{text-align:center;color:var(--accent);font:italic 22px Georgia,serif;line-height:1.2;overflow-wrap:anywhere}
       #paper-tickets .pt-receipt-meta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:8px 0 7px;padding-bottom:9px;border-bottom:1px dashed var(--line);font-size:14px;font-variant-numeric:tabular-nums}
       #paper-tickets .pt-receipt-meta strong{font-size:14px}
@@ -142,6 +142,7 @@ Error generating stack: `+g.message+`
     const priceSpecialtyStyle = document.createElement("style");
     priceSpecialtyStyle.textContent = `#paper-prices .pt-service-roles{min-width:0;margin:0;padding:0;border:0}#paper-prices .pt-service-roles legend{margin-bottom:7px;font-size:13px}#paper-prices .pt-service-roles>div{display:flex;flex-wrap:wrap;gap:5px}#paper-prices .pt-service-roles label{display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;font-size:12px;white-space:nowrap;cursor:pointer}#paper-prices .pt-service-roles input{width:16px;height:16px;min-height:16px;margin:0;padding:0;accent-color:var(--accent)}#paper-prices .pt-price-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:8px;min-width:0}#paper-prices .pt-price-fields label{min-width:0;overflow-wrap:anywhere}#paper-prices .pt-price-fields select{width:100%;min-height:46px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--canvas);color:var(--text)}@media(max-width:1080px){#paper-prices .pt-prices-grid{grid-template-columns:1fr}}@media(max-width:520px){#paper-prices .pt-price-fields{grid-template-columns:1fr}}`;
     document.head.append(priceSpecialtyStyle);
+    priceSpecialtyStyle.textContent += '#paper-prices .pt-service-order{grid-column:1/-1;display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:8px;font-weight:700}#paper-prices .pt-service-order input{box-sizing:border-box;width:72px;min-height:42px;padding:6px;text-align:center;font-size:18px}';
     style.textContent += `
       #paper-prices .pt-price-column{min-width:0;padding:18px;border:1px solid var(--line);border-radius:15px;background:var(--canvas)}#paper-prices .pt-price-column h3{margin:0 0 15px;padding-bottom:10px;border-bottom:2px solid var(--accent);color:var(--accent);font:700 21px Georgia,serif}#paper-prices .pt-price-list{display:grid;gap:14px}
     `;
@@ -368,17 +369,16 @@ Error generating stack: `+g.message+`
         const groups = new Map();
         for (const line of tickets) { const id = line.ticketGroupId || line.id; if (!groups.has(id)) groups.set(id, []); groups.get(id).push(line); }
         let next = nextTicketNumber(tickets);
+        for (const line of tickets) if (Number.isSafeInteger(line.ticketNumber) && line.ticketNumber >= next) next = line.ticketNumber + 1;
         let changed = false;
-        const usedNumbers = new Set();
         for (const lines of [...groups.values()].sort((a, b) => new Date(a[0].createdAt) - new Date(b[0].createdAt))) {
           const existing = lines.find((line) => Number.isSafeInteger(line.ticketNumber) && line.ticketNumber >= 0)?.ticketNumber;
-          const number = existing !== undefined && !usedNumbers.has(existing) ? existing : next++;
-          usedNumbers.add(number);
+          const number = existing !== undefined ? existing : next++;
           for (const line of lines) if (line.ticketNumber !== number) { line.ticketNumber = number; changed = true; }
         }
         try {
           if (changed) localStorage.setItem(PAPER_TICKETS_KEY, JSON.stringify(tickets));
-          if (Number(localStorage.getItem(NEXT_TICKET_KEY)) < next) localStorage.setItem(NEXT_TICKET_KEY, String(next));
+          if (changed && Number(localStorage.getItem(NEXT_TICKET_KEY)) < next) localStorage.setItem(NEXT_TICKET_KEY, String(next));
         } catch { /* El historial sigue visible aunque falle una escritura local. */ }
         return tickets;
       }
@@ -387,7 +387,8 @@ Error generating stack: `+g.message+`
     const saveTickets = (tickets, activity) => localStorage.setItem(PAPER_TICKETS_KEY, JSON.stringify(tickets), activity);
     const nextTicketNumber = (tickets) => {
       const stored = Number(localStorage.getItem(NEXT_TICKET_KEY));
-      let next = Number.isSafeInteger(stored) && stored >= 0 ? stored : 0;
+      if (Number.isSafeInteger(stored) && stored >= 0) return stored;
+      let next = 0;
       for (const ticket of tickets) if (Number.isSafeInteger(ticket.ticketNumber) && ticket.ticketNumber >= next) next = ticket.ticketNumber + 1;
       return next;
     };
@@ -588,8 +589,9 @@ Error generating stack: `+g.message+`
       #paper-tickets .pt-open-assignee-window.is-scrolling .pt-open-assignee-text{padding-left:100%;animation:pt-open-assignee-scroll 14s linear infinite}
       @keyframes pt-open-assignee-scroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
       @media(prefers-reduced-motion:reduce){#paper-tickets .pt-open-assignee-window.is-scrolling{overflow-x:auto}#paper-tickets .pt-open-assignee-window.is-scrolling .pt-open-assignee-text{padding-left:0;animation:none}}
-      #paper-tickets .pt-open-worker-modal{width:min(620px,100%);max-height:calc(100vh - 32px);overflow:auto}
-      #paper-tickets .pt-open-worker-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      #paper-tickets .pt-open-worker-modal{display:flex;flex-direction:column;width:min(620px,100%);max-height:calc(100dvh - 32px);overflow:hidden}
+      #paper-tickets .pt-open-worker-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+      #paper-tickets .pt-open-worker-modal>.pt-modal-actions{flex:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);background:var(--card)}
       #paper-tickets .pt-open-worker-column{display:flex;flex-direction:column;gap:8px;min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px}
       #paper-tickets .pt-open-worker-column h3{margin:0 0 4px;color:var(--accent);font-size:17px}
       #paper-tickets .pt-open-worker-choice{min-height:46px;text-align:left;white-space:normal;overflow-wrap:anywhere}
@@ -844,11 +846,11 @@ Error generating stack: `+g.message+`
       page.id = "paper-prices";
       const prices = getPrices();
       const roleChoices = (name, selected) => `<fieldset class="pt-service-roles"><legend>Roles que usan el servicio</legend><div>${SERVICE_ROLES.map(([role, label]) => `<label><input type="checkbox" name="${esc(name)}" value="${role}" ${selected.includes(role) ? "checked" : ""}>${label}</label>`).join("")}</div></fieldset>`;
-      const priceField = (name, value) => name === "PRODUCTO" ? `<div class="pt-price-service pt-product-service"><div class="pt-price-fields"><div><strong>PRODUCTO</strong><small>Nombre y precio por ticket</small></div><div><strong>Todos los roles</strong><small>Siempre disponible</small></div></div></div>` : `<div class="pt-price-service"><div class="pt-price-fields"><label>${esc(name)}<input name="${esc(name)}" data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(value)}" placeholder="Sin precio"></label>${roleChoices(`roles:${name}`, serviceRoles(name))}<label>Requiere insumos<select name="supplies:${esc(name)}" aria-label="Requiere insumos para ${esc(name)}"><option value="no" ${requiresSupplies(name) ? "" : "selected"}>No</option><option value="yes" ${requiresSupplies(name) ? "selected" : ""}>Sí</option></select></label></div><button type="button" class="pt-delete-service" data-delete-service="${esc(name)}" aria-label="Eliminar ${esc(name)}" title="Eliminar servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v7m4-7v7"/></svg></button></div>`;
-      const visiblePriceServices = getAllServices().filter((name) => name !== "PRODUCTO");
-      const priceColumns = [["Servicios", visiblePriceServices.filter((_, index) => index % 2 === 0)], ["Más servicios", visiblePriceServices.filter((_, index) => index % 2 === 1)]].map(([title, names]) => `<section class="pt-price-column"><h3>${title}</h3><div class="pt-price-list">${names.map((name) => priceField(name, prices[name])).join("")}</div></section>`).join("");
+      const orderField = (name) => `<label class="pt-service-order">Orden en Tickets<input name="order:${esc(name)}" type="number" inputmode="numeric" min="1" max="${getAllServices().length}" step="1" required value="${getAllServices().indexOf(name) + 1}" aria-label="Orden de ${esc(name)} en Tickets"></label>`;
+      const priceField = (name, value) => name === "PRODUCTO" ? `<div class="pt-price-service pt-product-service"><div class="pt-price-fields"><div><strong>PRODUCTO</strong><small>Nombre y precio por ticket</small></div><div><strong>Todos los roles</strong><small>Siempre disponible</small></div>${orderField(name)}</div></div>` : `<div class="pt-price-service"><div class="pt-price-fields">${orderField(name)}<label>${esc(name)}<input name="${esc(name)}" data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(value)}" placeholder="Sin precio"></label>${roleChoices(`roles:${name}`, serviceRoles(name))}<label>Requiere insumos<select name="supplies:${esc(name)}" aria-label="Requiere insumos para ${esc(name)}"><option value="no" ${requiresSupplies(name) ? "" : "selected"}>No</option><option value="yes" ${requiresSupplies(name) ? "selected" : ""}>Sí</option></select></label></div><button type="button" class="pt-delete-service" data-delete-service="${esc(name)}" aria-label="Eliminar ${esc(name)}" title="Eliminar servicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v7m4-7v7"/></svg></button></div>`;
+      const priceColumns = () => { const currentPrices = getPrices(); const visible = getAllServices(); return [["Servicios", visible.filter((_, index) => index % 2 === 0)], ["Más servicios", visible.filter((_, index) => index % 2 === 1)]].map(([title, names]) => `<section class="pt-price-column"><h3>${title}</h3><div class="pt-price-list">${names.map((name) => priceField(name, currentPrices[name])).join("")}</div></section>`).join(""); };
       const supplyField = (name) => `<div class="pt-supply-row"><span>${esc(name)}</span><span class="pt-supply-actions"><button type="button" data-edit-supply="${esc(name)}" aria-label="Editar ${esc(name)}">Editar</button><button type="button" data-delete-supply="${esc(name)}" aria-label="Eliminar ${esc(name)}" title="Eliminar insumo">🗑</button></span></div>`;
-      page.innerHTML = `<form class="pt-prices-panel"><div class="pt-modal-head"><h2>Servicios y precios</h2><button type="button" data-close>×</button></div><p class="pt-price-note">Precios base en pesos colombianos. El precio de un ticket se puede ajustar sin cambiar esta lista. Marca todos los roles que pueden usar cada servicio. Aparecerá al crear tickets para cualquiera de esos roles.</p><button type="button" class="pt-add-service" data-add-service>Añadir servicio</button><div class="pt-prices-grid">${priceColumns}</div><section class="pt-supplies-section"><h3>Insumos disponibles</h3><p>Elige las cantidades usadas al registrar los servicios que requieren insumos.</p><div class="pt-supplies-list">${getSupplies().map(supplyField).join("")}</div><button type="button" class="pt-add-supply" data-add-supply>Añadir insumo</button></section><div class="pt-modal-actions"><button type="button" data-close>Cancelar</button><button class="primary" type="submit">Guardar cambios</button></div></form>`;
+      page.innerHTML = `<form class="pt-prices-panel"><div class="pt-modal-head"><h2>Servicios y precios</h2><button type="button" data-close>×</button></div><p class="pt-price-note">Precios base en pesos colombianos. El precio de un ticket se puede ajustar sin cambiar esta lista. Marca todos los roles que pueden usar cada servicio. Aparecerá al crear tickets para cualquiera de esos roles. En Orden en Tickets, 1 aparece primero y el resto sigue de izquierda a derecha.</p><button type="button" class="pt-add-service" data-add-service>Añadir servicio</button><div class="pt-prices-grid">${priceColumns()}</div><section class="pt-supplies-section"><h3>Insumos disponibles</h3><p>Elige las cantidades usadas al registrar los servicios que requieren insumos.</p><div class="pt-supplies-list">${getSupplies().map(supplyField).join("")}</div><button type="button" class="pt-add-supply" data-add-supply>Añadir insumo</button></section><div class="pt-modal-actions"><button type="button" data-close>Cancelar</button><button class="primary" type="submit">Guardar cambios</button></div></form>`;
       const saveStatus = document.createElement("p");
       saveStatus.className = "pt-save-status";
       saveStatus.setAttribute("role", "status");
@@ -956,6 +958,14 @@ Error generating stack: `+g.message+`
         const updated = {};
         const specialties = { ...getServiceSpecialties() };
         const requirements = { ...getServiceSupplyRequirements() };
+        const currentOrder = getAllServices();
+        const positions = [];
+        for (const [index, name] of currentOrder.entries()) {
+          const rawPosition = String(form.get(`order:${name}`) ?? "").trim();
+          const position = Number(rawPosition);
+          if (!rawPosition || !Number.isInteger(position) || position < 1 || position > currentOrder.length) return alert(`Orden inválido: ${name}`);
+          positions.push({ name, position, original: index + 1 });
+        }
         for (const name of getAllServices()) {
           if (name === "PRODUCTO") continue;
           const roles = validServiceRoles(form.getAll(`roles:${name}`));
@@ -968,10 +978,18 @@ Error generating stack: `+g.message+`
           if (!Number.isInteger(amount) || amount < 0 || amount > 10000000) return alert(`Precio inválido: ${name}`);
           updated[name] = amount;
         }
+        const reordered = [...currentOrder];
+        for (const { name, position, original } of positions) {
+          if (position === original) continue;
+          reordered.splice(reordered.indexOf(name), 1);
+          reordered.splice(position - 1, 0, name);
+        }
+        specialties.__serviceOrder = reordered;
         specialties.__requiresSupplies = requirements;
         saveStatus.textContent = "";
         if (!await localStorage.saveSettings({ [PRICES_KEY]: updated, [SERVICE_SPECIALTIES_KEY]: specialties })) return;
         saveStatus.textContent = "Cambios guardados.";
+        page.querySelector(".pt-prices-grid").innerHTML = priceColumns();
         const ticketsPage = document.querySelector("#paper-tickets");
         if (ticketsPage) renderTickets(ticketsPage);
       });
@@ -1014,11 +1032,15 @@ Error generating stack: `+g.message+`
     openTicketsButton.textContent = "Tickets abiertos";
     openTicketsButton.addEventListener("click", async () => {
       await openTickets("tickets");
-      document.querySelector('#paper-tickets [data-action="open-list"]')?.click();
+      document.querySelector("#paper-tickets .pt-open-home")?.scrollIntoView({ block: "start" });
     });
     boardTicketActions.append(ticketFab, openTicketsButton);
     ticketFab.setAttribute("aria-label", "Abrir la pestaña de tickets");
-    ticketFab.addEventListener("click", showTickets);
+    ticketFab.addEventListener("click", async () => {
+      ticketScreen = "new";
+      await openTickets("tickets");
+      document.querySelector('#paper-tickets [data-action="new"]')?.click();
+    });
     historyLauncher.id = "paper-history-launcher";
     historyLauncher.type = "button";
     historyLauncher.textContent = "Historial de tickets";
@@ -1117,6 +1139,47 @@ Error generating stack: `+g.message+`
     }
     document.addEventListener("salon-tickets-updated", enhanceIdleSetting);
     enhanceIdleSetting();
+    function enhanceTicketNumberSetting() {
+      const panel = document.querySelector(".salon-app .app-controls .appearance-panel");
+      if (!panel) return;
+      let section = panel.querySelector("[data-ticket-number-setting]");
+      if (!section) {
+        section = document.createElement("section");
+        section.className = "idle-board-setting ticket-number-setting";
+        section.dataset.ticketNumberSetting = "";
+        section.innerHTML = '<label for="salon-next-ticket-input">Próximo número de ticket</label><input id="salon-next-ticket-input" data-next-ticket-input type="number" inputmode="numeric" min="0" max="999999999" step="1"><button type="button" data-save-next-ticket>Guardar número</button><small>Se aplica al siguiente ticket nuevo en todas las tablets. Los tickets anteriores conservan su número.</small><output data-next-ticket-status aria-live="polite"></output>';
+        panel.append(section);
+        const input = section.querySelector("[data-next-ticket-input]");
+        const button = section.querySelector("[data-save-next-ticket]");
+        const status = section.querySelector("[data-next-ticket-status]");
+        button.addEventListener("click", async () => {
+          const raw = input.value.trim();
+          const number = Number(raw);
+          if (!/^\d+$/.test(raw) || !Number.isSafeInteger(number) || number > 999999999) return alert("Escribe un número de ticket válido.");
+          button.disabled = true;
+          input.disabled = true;
+          status.textContent = "";
+          try {
+            await localStorage.ready;
+            const confirmed = await localStorage.setNextTicketNumber(number);
+            if (confirmed === true) status.textContent = `El siguiente ticket nuevo será #${number}.`;
+            else input.value = localStorage.getItem(NEXT_TICKET_KEY) || "0";
+          } catch (error) {
+            alert("No se pudo guardar el número de ticket: " + error.message);
+            input.value = localStorage.getItem(NEXT_TICKET_KEY) || "0";
+          } finally {
+            button.disabled = false;
+            input.disabled = false;
+          }
+        });
+        input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); button.click(); } });
+      }
+      const input = section.querySelector("[data-next-ticket-input]");
+      if (document.activeElement !== input && !input.disabled) input.value = localStorage.getItem(NEXT_TICKET_KEY) || "0";
+    }
+    style.textContent += '.salon-app .appearance-panel .ticket-number-setting input{width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--canvas);color:var(--text);font:600 16px Inter,Segoe UI,Arial,sans-serif}.salon-app .appearance-panel .ticket-number-setting button{min-height:42px}.salon-app .appearance-panel .ticket-number-setting output{color:var(--accent);font-size:12px}';
+    document.addEventListener("salon-tickets-updated", enhanceTicketNumberSetting);
+    enhanceTicketNumberSetting();
     const appearanceSource = document.querySelector(".salon-app .app-controls .appearance");
     const appearanceSummary = appearanceSource?.querySelector("summary");
     const appearanceProxy = drawer.querySelector("[data-drawer-appearance]");
@@ -1412,8 +1475,8 @@ Error generating stack: `+g.message+`
       const openGroups = [...groups.values()].filter(ticketGroupVisible).sort((a, b) => {
         const older = Date.parse(a.createdAt || "");
         const newer = Date.parse(b.createdAt || "");
-        if (Number.isFinite(older) && Number.isFinite(newer) && older !== newer) return older - newer;
-        return (Number(a.ticketNumber) - Number(b.ticketNumber)) || String(a.id).localeCompare(String(b.id));
+        if (Number.isFinite(older) && Number.isFinite(newer) && older !== newer) return newer - older;
+        return (Number(b.ticketNumber) - Number(a.ticketNumber)) || String(b.id).localeCompare(String(a.id));
       });
       let activeGroup = openGroups.find((group) => group.id === openTicketId);
       if (openTicketId && !activeGroup) {
@@ -1481,7 +1544,7 @@ Error generating stack: `+g.message+`
         const serviceRows = group.lines.map((line) => `<div class="pt-history-service-card"><span class="pt-line-info"><strong>${esc(line.serviceName === "PRODUCTO" && line.productName ? line.productName : line.serviceName)}</strong><small>${line.serviceName === "PRODUCTO" ? "PRODUCTO · " : ""}${esc(line.workerName)}${usageText(line.supplies) ? ` · ${esc(usageText(line.supplies))}` : ""}</small></span><span class="pt-line-price">${money(line.amount)}</span></div>`).join("");
         return `<li class="pt-history-ticket"><div class="pt-open-assignee" title="Para: ${esc(assigneeName)}"><span class="pt-open-assignee-label">Para:</span><span class="pt-open-assignee-window"><strong class="pt-open-assignee-text">${esc(assigneeName)}</strong></span></div><article class="pt-receipt pt-open-receipt" role="button" tabindex="0" data-open="${esc(group.id)}" data-ticket-group="${esc(group.id)}" aria-label="Continuar ticket #${esc(group.ticketNumber)} de ${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}. Mantén presionado para borrar."><div class="pt-receipt-customer">${esc(`${group.customerName} ${group.customerLastName || ""}`.trim())}</div><div class="pt-receipt-meta"><strong>Ticket #${esc(group.ticketNumber)}</strong><time datetime="${esc(dateValue)}">${shortDate}</time></div><div class="pt-receipt-services">${serviceRows}</div><div class="pt-receipt-total"><span>TOTAL</span><strong>${money(total)}</strong></div><div class="pt-receipt-foot"><span class="pt-receipt-status">Abierto</span><span class="pt-open-continue">Continuar →</span></div></article></li>`;
       }).join("")}</ul>` : `<p class="pt-empty">No hay tickets abiertos.</p>`;
-      content.innerHTML = `<section class="pt-client"><div class="pt-client-fields"><label><span class="pt-client-title">Cliente</span><input data-client="name" type="text" enterkeyhint="done" maxlength="80" value="${esc(customerName)}" ${activeGroup ? "readonly" : ""} placeholder="Nombre y apellido"></label></div></section>${ticketScreen === "open" ? `<section class="pt-open"><h2>Tickets abiertos</h2>${openList}</section>` : ""}<section class="pt-workbench"><aside class="pt-pane"><div class="pt-pane-head"><h2>Quién atendió</h2></div><div class="pt-worker-columns">${workerColumns}</div></aside><section class="pt-pane pt-services ${activeWorker ? "ready" : ""}"><div class="pt-pane-head"><h2>Servicios</h2><span>${activeWorker ? `${esc(activeWorker.name)} · Mantén presionado para ordenar` : "Selecciona al trabajador"}</span></div><input class="pt-service-search" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Buscar servicio" aria-label="Buscar servicio" value="${esc(serviceSearchQuery)}"><p class="pt-service-empty" hidden>No hay servicios que coincidan.</p><div class="pt-grid">${services}</div></section><aside class="pt-pane pt-value"><h2>Valor</h2>${service ? `<strong>${esc(service)}</strong><div class="pt-value-input"><label>Precio cobrado<input data-amount data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(ticketAmount)}"></label><button class="pt-check" type="button" data-action="add-line" aria-label="Agregar servicio al ticket" title="Agregar servicio al ticket">✓</button></div>` : `<p>Selecciona un servicio.</p>`}${ticketLines.length ? `<div class="pt-ticket-lines"><h3>Servicios del ticket</h3>${ticketLines.map((line, index) => line.pending && line.serviceName === "PRODUCTO" ? `<div class="pt-product-line"><label>PRODUCTO<input data-pending-product-name="${index - persistedLines.length}" type="text" maxlength="80" enterkeyhint="done" autocomplete="off" placeholder="Nombre del producto" value="${esc(line.productName || "")}"></label><label>Precio<input data-pending-product-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.productPriceEntered ? formatPrice(line.amount) : ""}"></label><button class="pt-product-delete danger" type="button" data-delete-pending="${index - persistedLines.length}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button><small>${esc(line.workerName)} · Sin guardar</small></div>` : line.pending && line.needsPrice ? `<div class="pt-unpriced-line"><span>${esc(line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}<em class="pt-pending-label">Sin guardar</em></small></span><span class="pt-line-actions"><label class="pt-pending-price-label">Precio<input data-pending-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.priceEntered ? formatPrice(line.amount) : ""}"></label><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button></span></div>` : `<div><span>${esc(line.serviceName === "PRODUCTO" && line.productName ? `PRODUCTO · ${line.productName}` : line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}${line.pending ? `<em class="pt-pending-label">Sin guardar</em>` : ""}</small></span><strong>${money(line.amount)}</strong><span class="pt-line-actions">${line.pending ? `<button type="button" data-edit-pending="${index - persistedLines.length}">Editar</button><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button>` : line.serviceName === "PRODUCTO" ? `<button class="pt-product-delete danger" type="button" data-delete-ticket="${esc(line.id)}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button>` : `<button type="button" data-edit-ticket="${esc(line.id)}">Editar</button><button class="danger" type="button" data-delete-ticket="${esc(line.id)}">Eliminar</button>`}</span></div>`).join("")}</div>` : ""}<div class="pt-total"><span>Total del ticket</span><strong data-ticket-total>${money(ticketTotal)}</strong></div></aside></section><section class="pt-ticket-actions"><nav class="pt-tabs"><button type="button" class="${ticketScreen === "new" ? "selected" : ""}" data-action="new">Nuevo ticket</button><button type="button" class="${ticketScreen === "open" ? "selected" : ""}" data-action="open-list">Tickets abiertos <span>${openGroups.length}</span></button></nav><button type="button" data-action="save-open">Dejar ticket abierto</button><button type="button" class="primary" data-action="finalize">Finalizar</button></section><section class="pt-recent pt-history"><h2>${TICKET_WORKER_SPECIALTY ? "Tickets finalizados" : "Historial de tickets"}</h2>${historyMarkup}</section>`;
+      content.innerHTML = `<section class="pt-client"><div class="pt-client-fields"><label><span class="pt-client-title">Cliente</span><input data-client="name" type="text" enterkeyhint="done" maxlength="80" value="${esc(customerName)}" ${activeGroup ? "readonly" : ""} placeholder="Nombre y apellido"></label></div></section><section class="pt-workbench"><aside class="pt-pane"><div class="pt-pane-head"><h2>Quién atendió</h2></div><div class="pt-worker-columns">${workerColumns}</div></aside><section class="pt-pane pt-services ${activeWorker ? "ready" : ""}"><div class="pt-pane-head"><h2>Servicios</h2><span>${activeWorker ? `${esc(activeWorker.name)} · Mantén presionado para ordenar` : "Selecciona al trabajador"}</span></div><input class="pt-service-search" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="Buscar servicio" aria-label="Buscar servicio" value="${esc(serviceSearchQuery)}"><p class="pt-service-empty" hidden>No hay servicios que coincidan.</p><div class="pt-grid">${services}</div></section><aside class="pt-pane pt-value"><h2>Valor</h2>${service ? `<strong>${esc(service)}</strong><div class="pt-value-input"><label>Precio cobrado<input data-amount data-money-input type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" value="${formatPrice(ticketAmount)}"></label><button class="pt-check" type="button" data-action="add-line" aria-label="Agregar servicio al ticket" title="Agregar servicio al ticket">✓</button></div>` : `<p>Selecciona un servicio.</p>`}${ticketLines.length ? `<div class="pt-ticket-lines"><h3>Servicios del ticket</h3>${ticketLines.map((line, index) => line.pending && line.serviceName === "PRODUCTO" ? `<div class="pt-product-line"><label>PRODUCTO<input data-pending-product-name="${index - persistedLines.length}" type="text" maxlength="80" enterkeyhint="done" autocomplete="off" placeholder="Nombre del producto" value="${esc(line.productName || "")}"></label><label>Precio<input data-pending-product-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.productPriceEntered ? formatPrice(line.amount) : ""}"></label><button class="pt-product-delete danger" type="button" data-delete-pending="${index - persistedLines.length}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button><small>${esc(line.workerName)} · Sin guardar</small></div>` : line.pending && line.needsPrice ? `<div class="pt-unpriced-line"><span>${esc(line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}<em class="pt-pending-label">Sin guardar</em></small></span><span class="pt-line-actions"><label class="pt-pending-price-label">Precio<input data-pending-price="${index - persistedLines.length}" type="text" inputmode="numeric" pattern="[0-9.]*" maxlength="10" enterkeyhint="done" autocomplete="off" placeholder="0" value="${line.priceEntered ? formatPrice(line.amount) : ""}"></label><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button></span></div>` : `<div><span>${esc(line.serviceName === "PRODUCTO" && line.productName ? `PRODUCTO · ${line.productName}` : line.serviceName)}<small>${esc(line.workerName)}${usageText(line.supplies) ? `<span class="pt-color-note">${esc(usageText(line.supplies))}</span>` : ""}${line.pending ? `<em class="pt-pending-label">Sin guardar</em>` : ""}</small></span><strong>${money(line.amount)}</strong><span class="pt-line-actions">${line.pending ? `<button type="button" data-edit-pending="${index - persistedLines.length}">Editar</button><button class="danger" type="button" data-delete-pending="${index - persistedLines.length}">Eliminar</button>` : line.serviceName === "PRODUCTO" ? `<button class="pt-product-delete danger" type="button" data-delete-ticket="${esc(line.id)}" aria-label="Eliminar producto" title="Eliminar producto">🗑️</button>` : `<button type="button" data-edit-ticket="${esc(line.id)}">Editar</button><button class="danger" type="button" data-delete-ticket="${esc(line.id)}">Eliminar</button>`}</span></div>`).join("")}</div>` : ""}<div class="pt-total"><span>Total del ticket</span><strong data-ticket-total>${money(ticketTotal)}</strong></div></aside></section><section class="pt-ticket-actions"><nav class="pt-tabs"><button type="button" class="${ticketScreen === "new" ? "selected" : ""}" data-action="new">Nuevo ticket</button><button type="button" class="${ticketScreen === "open" ? "selected" : ""}" data-action="open-list">Tickets abiertos <span>${openGroups.length}</span></button></nav><button type="button" data-action="save-open">Dejar ticket abierto</button><button type="button" class="primary" data-action="finalize">Finalizar</button></section><section class="pt-recent pt-history"><h2>${TICKET_WORKER_SPECIALTY ? "Tickets finalizados" : "Historial de tickets"}</h2>${historyMarkup}</section>`;
       content.querySelector(".pt-history").insertAdjacentHTML("beforebegin", `<section class="pt-open pt-open-home"><div class="pt-open-home-head"><h2>Tickets abiertos</h2><span>${openGroups.length}</span></div>${openList}</section>`);
       content.querySelector(".pt-client-title").insertAdjacentHTML("afterbegin", `<span class="pt-ticket-number" aria-label="Número de ticket">#${activeGroup?.ticketNumber ?? nextTicketNumber(allTickets)}</span>`);
       root.openAssigneeObserver?.disconnect();
@@ -1896,7 +1959,10 @@ Error generating stack: `+g.message+`
         } catch (error) { alert("No se pudo guardar el ticket: " + error.message); }
         finally { ticketSaveInFlight = false; saveButtons.forEach((button) => { if (button) button.disabled = false; }); }
       };
-      content.querySelector('[data-action="save-open"]').addEventListener("click", () => chooseOpenTicketWorker(root, openAssignees(activeGroup?.lines || []).map((worker) => worker.code), (workers) => save(true, workers)));
+      content.querySelector('[data-action="save-open"]').addEventListener("click", () => {
+        const assigned = activeGroup ? openAssignees(activeGroup.lines).map((assignee) => getWorkers(true).find((worker) => worker.code === assignee.code) || assignee) : [];
+        chooseOpenTicketWorker(root, assigned.map((worker) => worker.code), (workers) => save(true, workers));
+      });
       content.querySelector('[data-action="finalize"]').addEventListener("click", () => save(false));
     }
 
